@@ -49,12 +49,12 @@
 
     .page {
       width: 100%;
-      min-width: 1280px;
+      min-width: 1620px;
       padding: 28px 34px 48px;
     }
 
     .capture-area {
-      min-width: 1280px;
+      min-width: 1620px;
       padding: 0;
       background:
         radial-gradient(circle at top left, rgba(65, 150, 255, 0.13), transparent 30%),
@@ -91,10 +91,10 @@
 
     .top-row {
       display: grid;
-      grid-template-columns: 240px 300px 240px;
+      grid-template-columns: 290px 320px 290px;
       justify-content: center;
       align-items: center;
-      gap: 70px;
+      gap: 78px;
       margin-bottom: 38px;
       position: relative;
     }
@@ -103,8 +103,8 @@
       content: "";
       position: absolute;
       top: 50%;
-      left: calc(50% - 410px);
-      width: 820px;
+      left: calc(50% - 490px);
+      width: 980px;
       height: 2px;
       background: #aebbd5;
       z-index: 0;
@@ -240,9 +240,11 @@
       border: 0;
       background: transparent;
       color: #123678;
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 850;
       margin-bottom: 7px;
+      overflow: visible;
+      text-overflow: clip;
     }
 
     .post-input:focus {
@@ -252,21 +254,21 @@
     }
 
     .name-input {
-      border: 1px dashed #ffba63;
+      border: 1px dashed #8dbfff;
       border-radius: 8px;
-      background: #fff7eb;
+      background: #f2f8ff;
       padding: 7px 8px;
-      color: #9a5200;
+      color: #1976ed;
       font-size: 12px;
       font-weight: 750;
     }
 
     .name-input::placeholder {
-      color: #b98242;
+      color: #1976ed;
     }
 
     .box.main .post-input {
-      font-size: 25px;
+      font-size: 22px;
     }
 
     .box.main .name-input {
@@ -321,7 +323,7 @@
       outline: none;
       border-radius: 6px;
       padding: 6px 8px;
-      font-size: 12px;
+      font-size: 11px;
     }
 
     .role-input {
@@ -332,14 +334,14 @@
     }
 
     .role-name-input {
-      background: #fff4e4;
-      color: #9a5200;
+      background: #f2f8ff;
+      color: #1976ed;
       font-weight: 750;
-      box-shadow: inset 0 0 0 1px #ffd3a0;
+      box-shadow: inset 0 0 0 1px #8dbfff;
     }
 
     .role-name-input::placeholder {
-      color: #b98242;
+      color: #1976ed;
     }
 
     .delete-btn,
@@ -425,7 +427,8 @@
 
     .helper-note {
       position: fixed;
-      right: 22px;
+      left: 22px;
+      right: auto;
       bottom: 18px;
       background: #09235f;
       color: #fff;
@@ -572,7 +575,7 @@
     </div>
   </div>
 
-  <div class="helper-note">Role blue/white me rahega • Name orange box me alag dikhega • + se new role/box add hoga</div>
+  <div class="helper-note">Role stays in blue/white • Name stays separate in blue • Use + to add a new role or box</div>
 
   <script>
     function updateGridColumns() {
@@ -715,7 +718,8 @@
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
 
-      const scale = Math.min(finalCanvas.width / canvas.width, finalCanvas.height / canvas.height);
+      const safePadding = 90;
+      const scale = Math.min((finalCanvas.width - safePadding * 2) / canvas.width, (finalCanvas.height - safePadding * 2) / canvas.height);
       const newWidth = canvas.width * scale;
       const newHeight = canvas.height * scale;
       const x = (finalCanvas.width - newWidth) / 2;
