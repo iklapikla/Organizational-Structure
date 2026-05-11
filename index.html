@@ -1099,51 +1099,133 @@ function downloadCSV(){
 
  commitActiveEdit();
 
- var rows=[];
+ var csvRows=[];
 
- rows.push(["Role Name","Person Name"]);
+ function clean(value){
+  return String(value||"").replace(/\r/g," ").replace(/\n/g," ").trim();
+ }
 
- document.querySelectorAll(".top-row .box.main").forEach(function(box){
+ function hasValue(value){
+  return clean(value)!=="";
+ }
 
-  addCSVRow(
-   rows,
-   box.querySelector(".post-input").value,
-   box.querySelector(".name-input").value
-  );
+ function addVerticalPair(column,role,name){
+  role=clean(role);
+  name=clean(name);
+
+  if(role || name){
+   column.push(role);
+   column.push(name);
+   column.push("");
+  }
+ }
+
+ function pushMatrix(matrix){
+  matrix.forEach(function(row){
+   csvRows.push(row);
+  });
+ }
+
+ function csvEscape(value){
+  var text=String(value||"");
+  return '"'+text.replace(/"/g,'""')+'"';
+ }
+
+ /* TOP SECTION EXPORT
+    Each top box becomes one separate CSV column.
+    Row 1 = role, Row 2 = person name, Row 3 = blank.
+ */
+ document.querySelectorAll(".top-row-wrap").forEach(function(wrap){
+
+  var boxes=Array.prototype.slice.call(wrap.querySelectorAll(".top-row .box.main"));
+
+  if(boxes.length===0)return;
+
+  var roleRow=[];
+  var nameRow=[];
+  var blankRow=[];
+
+  boxes.forEach(function(box){
+   roleRow.push(clean(box.querySelector(".post-input").value));
+   nameRow.push(clean(box.querySelector(".name-input").value));
+   blankRow.push("");
+  });
+
+  pushMatrix([roleRow,nameRow,blankRow]);
 
  });
 
- document.querySelectorAll("#chiefRow .chief-node").forEach(function(node){
+ csvRows.push([]);
 
-  addCSVRow(
-   rows,
+ /* MAIN STRUCTURE EXPORT
+    Each chief department column becomes one separate CSV column.
+    Inside each column: role/post in one cell, person name just below it,
+    then one empty cell after every box/person pair.
+ */
+ var chiefNodes=Array.prototype.slice.call(document.querySelectorAll("#chiefRow .chief-node"));
+ var deptCols=Array.prototype.slice.call(document.querySelectorAll("#departmentGrid .department-col"));
+
+ var exportColumns=[];
+
+ chiefNodes.forEach(function(node,index){
+
+  var col=[];
+
+  addVerticalPair(
+   col,
    node.querySelector(".post-input").value,
    node.querySelector(".name-input").value
   );
 
+  var dept=deptCols[index];
+
+  if(dept){
+
+   dept.querySelectorAll(".box.team").forEach(function(team){
+
+    addVerticalPair(
+     col,
+     team.querySelector(".team-title .post-input").value,
+     team.querySelector(".team-title .name-input").value
+    );
+
+    team.querySelectorAll(".person-card").forEach(function(card){
+
+     addVerticalPair(
+      col,
+      card.querySelector(".role-input").value,
+      card.querySelector(".role-name-input").value
+     );
+
+    });
+
+    col.push("");
+
+   });
+  }
+
+  exportColumns.push(col);
+
  });
 
- document.querySelectorAll(".box.team").forEach(function(team){
+ var maxRows=0;
 
-  addCSVRow(
-   rows,
-   team.querySelector(".team-title .post-input").value,
-   team.querySelector(".team-title .name-input").value
-  );
+ exportColumns.forEach(function(col){
+  if(col.length>maxRows)maxRows=col.length;
+ });
 
-  team.querySelectorAll(".person-card").forEach(function(card){
+ for(var r=0;r<maxRows;r++){
 
-   addCSVRow(
-    rows,
-    card.querySelector(".role-input").value,
-    card.querySelector(".role-name-input").value
-   );
+  var row=[];
 
+  exportColumns.forEach(function(col){
+   row.push(col[r] || "");
   });
 
- });
+  csvRows.push(row);
+ }
 
- var csv=rows.map(function(row){
+ var csv=csvRows.map(function(row){
   return row.map(csvEscape).join(",");
  }).join("\n");
 
@@ -1160,7 +1242,6 @@ function downloadCSV(){
 
  URL.revokeObjectURL(link.href);
 }
-
 function downloadPNG(){
 
  commitActiveEdit();
