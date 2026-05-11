@@ -545,6 +545,34 @@
       font-size:12px!important
     }
 
+
+
+    body.downloading .png-export-text{
+      display:block!important;
+      width:100%!important;
+      height:auto!important;
+      min-height:18px!important;
+      max-height:none!important;
+      overflow:visible!important;
+      white-space:normal!important;
+      text-overflow:clip!important;
+      word-break:break-word!important;
+      overflow-wrap:anywhere!important;
+      line-height:1.35!important;
+      padding:3px 4px!important;
+      background:transparent!important;
+      border:0!important;
+      box-shadow:none!important;
+    }
+
+    body.downloading .box.main .png-export-text{
+      text-align:center!important;
+    }
+
+    body.downloading .team-title .png-export-text{
+      text-align:left!important;
+    }
+
     body.downloading .top-row:before,
     body.downloading .chief-row-wrap:before,
     body.downloading .connector-main,
@@ -1385,7 +1413,49 @@ function downloadPNG(){
    windowWidth:page.scrollWidth,
    windowHeight:page.scrollHeight,
    scrollX:0,
-   scrollY:0
+   scrollY:0,
+   onclone:function(clonedDoc){
+
+    clonedDoc.body.classList.add("downloading");
+
+    clonedDoc.querySelectorAll("input").forEach(function(input){
+
+     var value=(input.value || input.getAttribute("placeholder") || "").trim();
+
+     var div=clonedDoc.createElement("div");
+
+     div.className=input.className + " png-export-text";
+     div.textContent=value;
+
+     if(input.classList.contains("post-input")){
+      div.style.color="#123678";
+      div.style.fontWeight="850";
+      div.style.fontSize=input.closest(".box.main") ? "20px" : "15px";
+      div.style.marginBottom="7px";
+     }
+
+     if(input.classList.contains("name-input")){
+      div.style.color=value==="Enter name here" ? "#a8b2c1" : "#1976ed";
+      div.style.fontWeight="750";
+      div.style.fontSize=input.closest(".box.main") ? "14px" : "12px";
+     }
+
+     if(input.classList.contains("role-input")){
+      div.style.color="#173a78";
+      div.style.fontWeight="750";
+      div.style.fontSize="11px";
+     }
+
+     if(input.classList.contains("role-name-input")){
+      div.style.color=value==="Enter name" ? "#a8b2c1" : "#1976ed";
+      div.style.fontWeight="750";
+      div.style.fontSize="11px";
+     }
+
+     input.parentNode.replaceChild(div,input);
+
+    });
+   }
   }).then(function(canvas){
 
    var link=document.createElement("a");
