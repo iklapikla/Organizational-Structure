@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Editable Organizational Structure</title>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Inter,Arial,sans-serif}
     html,body{min-height:100%;background:#f8fbff}
@@ -41,7 +40,7 @@
 
     .top-section{display:flex;flex-direction:column;align-items:center;margin-bottom:38px;position:relative}
     .section-add{
-      border:1px dashed rgba(35,133,255,.25);background:rgba(255,255,255,.42);color:rgba(35,133,255,.42);
+      border:1px dashed rgba(35,133,255,.20);background:rgba(255,255,255,.42);color:rgba(35,133,255,.35);
       width:28px;height:28px;border-radius:50%;font-size:17px;font-weight:700;line-height:24px;cursor:pointer;margin:6px 0
     }
     .top-row-wrap{position:relative;width:max-content;margin:1px 0}
@@ -49,38 +48,38 @@
       display:flex;justify-content:center;align-items:center;gap:78px;position:relative;padding:0 70px;min-height:116px
     }
     .top-row:before{
-      content:"";position:absolute;top:50%;left:70px;right:70px;height:2px;background:#aebbd5;z-index:0
+      content:"";position:absolute;top:50%;left:70px;right:70px;height:1px;background:#d6e0f1;z-index:0
     }
     .top-row:empty:before{display:none}
-    .top-row .box{z-index:1;min-height:96px;width:auto;min-width:320px;flex:0 0 auto}
+    .top-row .box{z-index:2;min-height:96px;width:auto;min-width:320px;flex:0 0 auto}
     .top-side-add{
       position:absolute;right:18px;top:50%;transform:translateY(-50%);
-      border:1px dashed rgba(35,133,255,.25);background:rgba(255,255,255,.45);color:rgba(35,133,255,.42);
-      width:30px;height:30px;border-radius:50%;font-size:18px;font-weight:700;cursor:pointer;z-index:2
+      border:1px dashed rgba(35,133,255,.20);background:rgba(255,255,255,.45);color:rgba(35,133,255,.35);
+      width:30px;height:30px;border-radius:50%;font-size:18px;font-weight:700;cursor:pointer;z-index:3
     }
 
-    .connector-main{width:2px;height:38px;background:#aebbd5;margin:-38px auto 0}
+    .connector-main{width:1px;height:38px;background:#d6e0f1;margin:-38px auto 0}
     .chief-row-wrap{position:relative;padding-top:38px;margin-bottom:44px}
-    .chief-row-wrap:before{content:"";position:absolute;top:0;left:7%;right:7%;height:2px;background:#aebbd5}
+    .chief-row-wrap:before{content:"";position:absolute;top:0;left:7%;right:7%;height:1px;background:#d6e0f1;z-index:0}
     .chief-row,.department-grid{display:grid;grid-template-columns:repeat(7,220px) 54px;gap:24px;align-items:start}
     .chief-row{align-items:center}
-    .chief-node,.department-col{position:relative}
-    .chief-node:before,.department-col:before{content:"";position:absolute;left:50%;width:2px;background:#aebbd5;transform:translateX(-50%)}
+    .chief-node,.department-col{position:relative;z-index:2}
+    .chief-node:before,.department-col:before{content:"";position:absolute;left:50%;width:1px;background:#d6e0f1;transform:translateX(-50%);z-index:0}
     .chief-node:before{top:-38px;height:32px}
     .department-col:before{top:-44px;height:34px}
     .chief-node:after,.department-col:after{
-      content:"";position:absolute;left:50%;width:8px;height:8px;border:2px solid #aebbd5;background:#f8fbff;border-radius:50%;transform:translateX(-50%)
+      content:"";position:absolute;left:50%;width:6px;height:6px;border:1px solid #c7d6ed;background:#f8fbff;border-radius:50%;transform:translateX(-50%);z-index:1
     }
-    .chief-node:after{top:-42px}.department-col:after{top:-50px}
+    .chief-node:after{top:-41px}.department-col:after{top:-48px}
     .department-col{display:flex;flex-direction:column;gap:18px;min-height:80px}
 
     .box{
-      background:rgba(255,255,255,.92);border:1.5px solid #cde0ff;border-radius:13px;
-      box-shadow:0 8px 18px rgba(19,74,145,.13);padding:14px 16px;position:relative;min-height:78px;transition:.2s ease
+      background:rgba(255,255,255,.96);border:1.5px solid #cde0ff;border-radius:13px;
+      box-shadow:0 8px 18px rgba(19,74,145,.13);padding:14px 16px;position:relative;min-height:78px;transition:.2s ease;z-index:5
     }
     .box:hover{transform:translateY(-2px);box-shadow:0 12px 24px rgba(19,74,145,.18);border-color:#91c2ff}
     .box.main{text-align:center;padding:18px 20px}.box.chief{min-height:76px}
-    .post-input,.name-input{width:100%;outline:none;text-align:center}
+    .post-input,.name-input{width:100%;outline:none;text-align:center;position:relative;z-index:6}
     .post-input{
       border:0;background:transparent;color:#123678;font-size:15px;font-weight:850;margin-bottom:7px;
       overflow:visible;text-overflow:unset;white-space:normal;min-height:24px
@@ -98,41 +97,31 @@
     .person-list{display:flex;flex-direction:column;gap:7px;margin-top:10px}
     .person-card{display:grid;grid-template-columns:1fr 24px;gap:6px;align-items:center}
     .person-fields{display:grid;grid-template-columns:1fr;gap:5px;background:#fbfdff;border:1px solid #dceaff;border-radius:8px;padding:5px}
-    .role-input,.role-name-input{width:100%;border:0;outline:none;border-radius:6px;padding:6px 8px;font-size:11px}
+    .role-input,.role-name-input{width:100%;border:0;outline:none;border-radius:6px;padding:6px 8px;font-size:11px;position:relative;z-index:6}
     .role-input{background:#fff;color:#173a78;font-weight:750;box-shadow:inset 0 0 0 1px #e4efff}
     .role-name-input{background:#f2f8ff;color:#1976ed;font-weight:750;box-shadow:inset 0 0 0 1px #8dbfff}
     .role-name-input::placeholder{color:#a8b2c1}
 
     .delete-btn,.small-delete{
       position:absolute;top:7px;right:7px;border:0;width:22px;height:22px;border-radius:50%;background:#fff1f2;color:#e11d48;
-      font-size:14px;font-weight:900;cursor:pointer;line-height:20px;box-shadow:0 3px 8px rgba(225,29,72,.12);opacity:0;transition:.2s ease
+      font-size:14px;font-weight:900;cursor:pointer;line-height:20px;box-shadow:0 3px 8px rgba(225,29,72,.12);opacity:0;transition:.2s ease;z-index:10
     }
     .box:hover .delete-btn{opacity:1}
     .small-delete{position:static;width:22px;height:22px;font-size:13px;opacity:1;box-shadow:none}
     .add-person{
-      border:1px dashed rgba(35,133,255,.3);background:rgba(242,248,255,.58);color:rgba(25,118,237,.52);
+      border:1px dashed rgba(35,133,255,.25);background:rgba(242,248,255,.58);color:rgba(25,118,237,.45);
       height:26px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;transition:.2s ease
     }
     .add-box{
-      width:100%;min-height:62px;border:1.5px dashed rgba(35,133,255,.25);background:rgba(255,255,255,.5);
-      border-radius:13px;color:rgba(35,133,255,.42);font-size:24px;font-weight:700;cursor:pointer;box-shadow:0 6px 14px rgba(19,74,145,.05);transition:.2s ease
+      width:100%;min-height:62px;border:1.5px dashed rgba(35,133,255,.20);background:rgba(255,255,255,.5);
+      border-radius:13px;color:rgba(35,133,255,.35);font-size:24px;font-weight:700;cursor:pointer;box-shadow:0 6px 14px rgba(19,74,145,.05);transition:.2s ease
     }
     .add-column{
-      width:54px;min-height:76px;border:1.5px dashed rgba(35,133,255,.25);background:rgba(255,255,255,.55);
-      border-radius:13px;color:rgba(35,133,255,.42);font-size:26px;font-weight:700;cursor:pointer;transition:.2s ease;z-index:2
+      width:54px;min-height:76px;border:1.5px dashed rgba(35,133,255,.20);background:rgba(255,255,255,.55);
+      border-radius:13px;color:rgba(35,133,255,.35);font-size:26px;font-weight:700;cursor:pointer;transition:.2s ease;z-index:2
     }
     .section-add:hover,.top-side-add:hover,.add-person:hover,.add-box:hover,.add-column:hover{
-      background:#eef7ff;border-color:rgba(35,133,255,.55);color:rgba(35,133,255,.72)
-    }
-    body.downloading .toolbar,
-    body.downloading .section-add,
-    body.downloading .top-side-add,
-    body.downloading .add-person,
-    body.downloading .add-box,
-    body.downloading .add-column,
-    body.downloading .delete-btn,
-    body.downloading .small-delete{
-      display:none!important
+      background:#eef7ff;border-color:rgba(35,133,255,.45);color:rgba(35,133,255,.62)
     }
   </style>
 </head>
@@ -141,7 +130,7 @@
     <button class="light-btn" onclick="undoAction()">Undo</button>
     <button class="light-btn" onclick="redoAction()">Redo</button>
     <button onclick="downloadCSV()">Download CSV</button>
-    <button onclick="downloadImage()">Download Image</button>
+    <button onclick="downloadSVG()">Download SVG</button>
   </div>
 
   <div class="page" id="downloadPage">
@@ -229,19 +218,16 @@ var activeEditOldFontSize=null;
 function chartHTML(){
  return document.querySelector(".org-chart").innerHTML;
 }
-
 function pushUndo(action){
  if(isRestoring || !action)return;
  undoStack.push(action);
  if(undoStack.length>120)undoStack.shift();
  redoStack=[];
 }
-
 function saveState(){
  commitActiveEdit();
  pushUndo({type:"snapshot",html:chartHTML()});
 }
-
 function restoreState(html){
  isRestoring=true;
  document.querySelector(".org-chart").innerHTML=html;
@@ -252,14 +238,12 @@ function restoreState(html){
  activeEditOldFontSize=null;
  isRestoring=false;
 }
-
 function applyInputValue(input,value,fontSize){
  if(!input)return;
  input.value=value;
  if(fontSize){input.style.fontSize=fontSize;}
  autoFitInput(input);
 }
-
 function commitActiveEdit(){
  if(!activeEditInput)return;
  var newValue=activeEditInput.value;
@@ -277,7 +261,6 @@ function commitActiveEdit(){
  activeEditOldValue=null;
  activeEditOldFontSize=null;
 }
-
 function undoAction(){
  if(activeEditInput){
   var inputNow=activeEditInput;
@@ -285,7 +268,6 @@ function undoAction(){
   var oldFontNow=activeEditOldFontSize;
   var newValueNow=inputNow.value;
   var newFontNow=inputNow.style.fontSize;
-
   if(newValueNow!==oldValueNow){
    redoStack.push({
     type:"input",
@@ -302,58 +284,45 @@ function undoAction(){
   activeEditOldFontSize=null;
   return;
  }
-
  if(undoStack.length===0)return;
  var action=undoStack.pop();
-
  if(action.type==="input"){
   redoStack.push(action);
   applyInputValue(action.input,action.oldValue,action.oldFontSize);
   return;
  }
-
  if(action.type==="snapshot"){
   redoStack.push({type:"snapshot",html:chartHTML()});
   restoreState(action.html);
  }
 }
-
 function redoAction(){
  commitActiveEdit();
  if(redoStack.length===0)return;
  var action=redoStack.pop();
-
  if(action.type==="input"){
   undoStack.push(action);
   applyInputValue(action.input,action.newValue,action.newFontSize);
   return;
  }
-
  if(action.type==="snapshot"){
   undoStack.push({type:"snapshot",html:chartHTML()});
   restoreState(action.html);
  }
 }
-
 function setupInput(input){
  input.addEventListener("focus",function(){
   activeEditInput=input;
   activeEditOldValue=input.value;
   activeEditOldFontSize=input.style.fontSize;
  });
- input.addEventListener("input",function(){
-  autoFitInput(input);
- });
- input.addEventListener("blur",function(){
-  commitActiveEdit();
- });
+ input.addEventListener("input",function(){autoFitInput(input);});
+ input.addEventListener("blur",function(){commitActiveEdit();});
  autoFitInput(input);
 }
-
 function setupExistingInputs(){
  document.querySelectorAll("input").forEach(setupInput);
 }
-
 function autoFitInput(input){
  var text=(input.value || input.placeholder || "");
  var len=text.length;
@@ -368,24 +337,18 @@ function autoFitInput(input){
   else{input.style.fontSize="11px";}
  }
 }
-
 function makeInput(className,value,placeholder){
  var input=document.createElement("input");
- input.className=className;
- input.value=value||"";
- input.placeholder=placeholder||"";
+ input.className=className;input.value=value||"";input.placeholder=placeholder||"";
  setupInput(input);
  return input;
 }
-
 function makeDeleteButton(functionName){
  var button=document.createElement("button");
  button.className=functionName==="deletePerson"?"small-delete":"delete-btn";
- button.textContent="×";
- button.setAttribute("onclick",functionName+"(this)");
+ button.textContent="×";button.setAttribute("onclick",functionName+"(this)");
  return button;
 }
-
 function makeTopMainBox(role,name){
  var box=document.createElement("div");
  box.className="box main";
@@ -394,73 +357,49 @@ function makeTopMainBox(role,name){
  box.appendChild(makeInput("name-input",name||"","Enter name here"));
  return box;
 }
-
 function makePersonCard(role){
- var card=document.createElement("div");
- card.className="person-card";
- var fields=document.createElement("div");
- fields.className="person-fields";
+ var card=document.createElement("div");card.className="person-card";
+ var fields=document.createElement("div");fields.className="person-fields";
  fields.appendChild(makeInput("role-input",role||"","Enter role"));
  fields.appendChild(makeInput("role-name-input","","Enter name"));
- card.appendChild(fields);
- card.appendChild(makeDeleteButton("deletePerson"));
+ card.appendChild(fields);card.appendChild(makeDeleteButton("deletePerson"));
  return card;
 }
-
 function makeTeamBox(title,roles){
- var box=document.createElement("div");
- box.className="box team";
+ var box=document.createElement("div");box.className="box team";
  box.appendChild(makeDeleteButton("deleteBox"));
-
- var head=document.createElement("div");
- head.className="team-title";
+ var head=document.createElement("div");head.className="team-title";
  head.appendChild(makeInput("post-input",title||"","Enter team/post"));
  head.appendChild(makeInput("name-input","","Enter team head name"));
  box.appendChild(head);
-
- var list=document.createElement("div");
- list.className="person-list";
- (roles||[""]).forEach(function(role){
-  list.appendChild(makePersonCard(role));
- });
-
+ var list=document.createElement("div");list.className="person-list";
+ (roles||[""]).forEach(function(role){list.appendChild(makePersonCard(role));});
  var addButton=document.createElement("button");
- addButton.className="add-person";
- addButton.textContent="+";
+ addButton.className="add-person";addButton.textContent="+";
  addButton.setAttribute("onclick","addPerson(this)");
- list.appendChild(addButton);
- box.appendChild(list);
+ list.appendChild(addButton);box.appendChild(list);
  return box;
 }
-
 function makeChiefNode(chief,name){
- var node=document.createElement("div");
- node.className="chief-node";
- var box=document.createElement("div");
- box.className="box chief";
+ var node=document.createElement("div");node.className="chief-node";
+ var box=document.createElement("div");box.className="box chief";
  box.appendChild(makeDeleteButton("deleteColumn"));
  box.appendChild(makeInput("post-input",chief||"","Enter Post"));
  box.appendChild(makeInput("name-input",name||"","Enter name here"));
  node.appendChild(box);
  return node;
 }
-
 function makeDepartmentCol(teams,withDefaultTeam){
- var col=document.createElement("div");
- col.className="department-col";
+ var col=document.createElement("div");col.className="department-col";
  if(withDefaultTeam!==false){
-  (teams||[{title:"",roles:[""]}]).forEach(function(team){
-   col.appendChild(makeTeamBox(team.title,team.roles));
-  });
+  (teams||[{title:"",roles:[""]}]).forEach(function(team){col.appendChild(makeTeamBox(team.title,team.roles));});
  }
  var addBox=document.createElement("button");
- addBox.className="add-box";
- addBox.textContent="+";
+ addBox.className="add-box";addBox.textContent="+";
  addBox.setAttribute("onclick","addTeamBox(this)");
  col.appendChild(addBox);
  return col;
 }
-
 function renderInitial(){
  var chiefRow=document.getElementById("chiefRow");
  var grid=document.getElementById("departmentGrid");
@@ -469,13 +408,11 @@ function renderInitial(){
   grid.appendChild(makeDepartmentCol(item.teams,true));
  });
  var addColumnButton=document.createElement("button");
- addColumnButton.className="add-column";
- addColumnButton.textContent="+";
+ addColumnButton.className="add-column";addColumnButton.textContent="+";
  addColumnButton.setAttribute("onclick","addColumn()");
  chiefRow.appendChild(addColumnButton);
  updateGridColumns();
 }
-
 function updateGridColumns(){
  var chiefRow=document.getElementById("chiefRow");
  var grid=document.getElementById("departmentGrid");
@@ -485,39 +422,27 @@ function updateGridColumns(){
  chiefRow.style.gridTemplateColumns=template;
  grid.style.gridTemplateColumns=template;
 }
-
 function addTopBox(button){
  saveState();
  var wrap=button.closest(".top-row-wrap");
  var row=wrap.querySelector(".top-row");
  row.appendChild(makeTopMainBox("",""));
 }
-
 function addTopSection(position){
  saveState();
  var topSection=document.getElementById("topSection");
  var newRowWrap=document.createElement("div");
  newRowWrap.className="top-row-wrap";
-
  var newRow=document.createElement("div");
  newRow.className="top-row";
  newRow.appendChild(makeTopMainBox("",""));
-
  var addBtn=document.createElement("button");
- addBtn.className="top-side-add";
- addBtn.textContent="+";
+ addBtn.className="top-side-add";addBtn.textContent="+";
  addBtn.onclick=function(){addTopBox(addBtn);};
-
- newRowWrap.appendChild(newRow);
- newRowWrap.appendChild(addBtn);
-
- if(position==="above"){
-  topSection.insertBefore(newRowWrap,topSection.children[1]);
- }else{
-  topSection.insertBefore(newRowWrap,topSection.lastElementChild);
- }
+ newRowWrap.appendChild(newRow);newRowWrap.appendChild(addBtn);
+ if(position==="above"){topSection.insertBefore(newRowWrap,topSection.children[1]);}
+ else{topSection.insertBefore(newRowWrap,topSection.lastElementChild);}
 }
-
 function addColumn(){
  saveState();
  var chiefRow=document.getElementById("chiefRow");
@@ -527,24 +452,20 @@ function addColumn(){
  grid.appendChild(makeDepartmentCol([],false));
  updateGridColumns();
 }
-
 function addTeamBox(button){
  saveState();
  var col=button.closest(".department-col");
  col.insertBefore(makeTeamBox("",[""]),button);
 }
-
 function addPerson(button){
  saveState();
  button.parentElement.insertBefore(makePersonCard(""),button);
 }
-
 function deletePerson(button){
  saveState();
  var personCard=button.closest(".person-card");
  if(personCard){personCard.remove();}
 }
-
 function deleteBox(button){
  saveState();
  var box=button.closest(".box");
@@ -558,100 +479,95 @@ function deleteBox(button){
   }
  }
 }
-
 function deleteColumn(button){
  commitActiveEdit();
  var node=button.closest(".chief-node");
  var nodes=Array.prototype.slice.call(document.querySelectorAll("#chiefRow .chief-node"));
- if(nodes.length<=1){
-  alert("At least one column should remain.");
-  return;
- }
+ if(nodes.length<=1){alert("At least one column should remain.");return;}
  saveState();
  var index=nodes.indexOf(node);
  var cols=document.querySelectorAll("#departmentGrid .department-col");
  if(cols[index]){cols[index].remove();}
- node.remove();
- updateGridColumns();
+ node.remove();updateGridColumns();
 }
-
 function csvEscape(value){
  var text=String(value||"").replace(/\r/g," ").replace(/\n/g," ").trim();
  return '"'+text.replace(/"/g,'""')+'"';
 }
-
 function addCSVRow(rows,role,name){
  role=String(role||"").trim();
  name=String(name||"").trim();
  if(role || name){rows.push([role,name]);}
 }
-
 function downloadCSV(){
  commitActiveEdit();
  var rows=[];
  rows.push(["Role Name","Person Name"]);
-
  document.querySelectorAll(".top-row .box.main").forEach(function(box){
   addCSVRow(rows,box.querySelector(".post-input").value,box.querySelector(".name-input").value);
  });
-
  document.querySelectorAll("#chiefRow .chief-node").forEach(function(node){
   addCSVRow(rows,node.querySelector(".post-input").value,node.querySelector(".name-input").value);
  });
-
  document.querySelectorAll(".box.team").forEach(function(team){
   addCSVRow(rows,team.querySelector(".team-title .post-input").value,team.querySelector(".team-title .name-input").value);
   team.querySelectorAll(".person-card").forEach(function(card){
    addCSVRow(rows,card.querySelector(".role-input").value,card.querySelector(".role-name-input").value);
   });
  });
-
  var csv=rows.map(function(row){return row.map(csvEscape).join(",");}).join("\n");
  var blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
  var link=document.createElement("a");
+ link.href=URL.createObjectURL(blob);link.download="organizational-structure.csv";
+ document.body.appendChild(link);link.click();document.body.removeChild(link);
+ URL.revokeObjectURL(link.href);
+}
+function escapeHTML(value){
+ return String(value||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function downloadSVG(){
+ commitActiveEdit();
+ var page=document.getElementById("downloadPage");
+ var clone=page.cloneNode(true);
+
+ clone.querySelectorAll("button").forEach(function(btn){btn.remove();});
+ clone.querySelectorAll("input").forEach(function(input){
+  var div=document.createElement("div");
+  div.className=input.className+" export-input";
+  div.textContent=input.value || input.placeholder || "";
+  div.setAttribute("style",input.getAttribute("style") || "");
+  input.parentNode.replaceChild(div,input);
+ });
+
+ var width=page.scrollWidth;
+ var height=page.scrollHeight;
+
+ var css=document.querySelector("style").innerHTML;
+ css += `
+   .toolbar{display:none!important}
+   .export-input{display:block;line-height:1.25;min-height:20px}
+   .post-input,.name-input,.role-input,.role-name-input{white-space:normal!important}
+   .delete-btn,.small-delete,.section-add,.top-side-add,.add-person,.add-box,.add-column{display:none!important}
+   .box:hover{transform:none!important}
+ `;
+
+ var xhtml='<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"><head><style>'+css+'</style></head><body>'+clone.outerHTML+'</body></html>';
+
+ var svg =
+ '<svg xmlns="http://www.w3.org/2000/svg" width="'+width+'" height="'+height+'" viewBox="0 0 '+width+' '+height+'">' +
+ '<foreignObject width="100%" height="100%">' +
+ xhtml +
+ '</foreignObject>' +
+ '</svg>';
+
+ var blob=new Blob([svg],{type:"image/svg+xml;charset=utf-8"});
+ var link=document.createElement("a");
  link.href=URL.createObjectURL(blob);
- link.download="organizational-structure.csv";
+ link.download="organizational-structure.svg";
  document.body.appendChild(link);
  link.click();
  document.body.removeChild(link);
  URL.revokeObjectURL(link.href);
-}
-
-function downloadImage(){
- commitActiveEdit();
-
- if(typeof html2canvas==="undefined"){
-  alert("Image download library not loaded. Please check internet connection and try again.");
-  return;
- }
-
- var page=document.getElementById("downloadPage");
- document.body.classList.add("downloading");
-
- setTimeout(function(){
-  html2canvas(page,{
-   backgroundColor:"#f8fbff",
-   scale:2,
-   useCORS:true,
-   width:page.scrollWidth,
-   height:page.scrollHeight,
-   windowWidth:page.scrollWidth,
-   windowHeight:page.scrollHeight,
-   scrollX:0,
-   scrollY:0
-  }).then(function(canvas){
-   var link=document.createElement("a");
-   link.download="organizational-structure.png";
-   link.href=canvas.toDataURL("image/png");
-   document.body.appendChild(link);
-   link.click();
-   document.body.removeChild(link);
-   document.body.classList.remove("downloading");
-  }).catch(function(){
-   document.body.classList.remove("downloading");
-   alert("Image download failed. Please try again.");
-  });
- },150);
 }
 
 renderInitial();
