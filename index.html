@@ -5,18 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Editable Organizational Structure</title>
 
-  <style>
-    *{
-      box-sizing:border-box;
-      margin:0;
-      padding:0;
-      font-family:Inter,Arial,sans-serif
-    }
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
-    html,body{
-      min-height:100%;
-      background:#f8fbff
-    }
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Inter,Arial,sans-serif}
+    html,body{min-height:100%;background:#f8fbff}
 
     body{
       min-height:100vh;
@@ -195,6 +188,10 @@
       align-items:start
     }
 
+    .chief-row{
+      align-items:center
+    }
+
     .chief-node,
     .department-col{
       position:relative;
@@ -263,17 +260,28 @@
       z-index:5
     }
 
+    .box:hover{
+      transform:translateY(-2px);
+      box-shadow:0 12px 24px rgba(19,74,145,.18);
+      border-color:#91c2ff
+    }
+
     .box.main{
       text-align:center;
       padding:18px 20px
     }
 
+    .box.chief{
+      min-height:76px
+    }
+
     .post-input,
-    .name-input,
-    .role-input,
-    .role-name-input{
+    .name-input{
       width:100%;
-      outline:none
+      outline:none;
+      text-align:center;
+      position:relative;
+      z-index:6
     }
 
     .post-input{
@@ -283,7 +291,16 @@
       font-size:15px;
       font-weight:850;
       margin-bottom:7px;
-      text-align:center
+      overflow:visible;
+      text-overflow:unset;
+      white-space:normal;
+      min-height:24px
+    }
+
+    .post-input:focus{
+      background:#f7fbff;
+      border-radius:7px;
+      box-shadow:inset 0 0 0 1px #cfe3ff
     }
 
     .name-input{
@@ -294,17 +311,34 @@
       color:#1976ed;
       font-size:12px;
       font-weight:750;
-      text-align:center
+      overflow:visible;
+      text-overflow:unset
+    }
+
+    .name-input::placeholder{
+      color:#a8b2c1
+    }
+
+    .box.main .post-input{
+      font-size:20px;
+      min-height:27px
+    }
+
+    .box.main .name-input{
+      font-size:14px
     }
 
     .team-title{
       display:grid;
+      grid-template-columns:1fr;
       gap:7px;
       margin-bottom:10px
     }
 
     .team-title .post-input{
-      text-align:left
+      text-align:left;
+      font-size:15px;
+      margin-bottom:0
     }
 
     .team-title .name-input{
@@ -327,6 +361,7 @@
 
     .person-fields{
       display:grid;
+      grid-template-columns:1fr;
       gap:5px;
       background:#fbfdff;
       border:1px solid #dceaff;
@@ -334,13 +369,22 @@
       padding:5px
     }
 
+    .role-input,
+    .role-name-input{
+      width:100%;
+      border:0;
+      outline:none;
+      border-radius:6px;
+      padding:6px 8px;
+      font-size:11px;
+      position:relative;
+      z-index:6
+    }
+
     .role-input{
       background:#fff;
       color:#173a78;
       font-weight:750;
-      border:0;
-      border-radius:6px;
-      padding:6px 8px;
       box-shadow:inset 0 0 0 1px #e4efff
     }
 
@@ -348,10 +392,11 @@
       background:#f2f8ff;
       color:#1976ed;
       font-weight:750;
-      border:0;
-      border-radius:6px;
-      padding:6px 8px;
       box-shadow:inset 0 0 0 1px #8dbfff
+    }
+
+    .role-name-input::placeholder{
+      color:#a8b2c1
     }
 
     .delete-btn,
@@ -368,7 +413,11 @@
       font-size:14px;
       font-weight:900;
       cursor:pointer;
-      opacity:0
+      line-height:20px;
+      box-shadow:0 3px 8px rgba(225,29,72,.12);
+      opacity:0;
+      transition:.2s ease;
+      z-index:10
     }
 
     .box:hover .delete-btn{
@@ -377,13 +426,11 @@
 
     .small-delete{
       position:static;
-      opacity:1
-    }
-
-    .add-person,
-    .add-box,
-    .add-column{
-      cursor:pointer
+      width:22px;
+      height:22px;
+      font-size:13px;
+      opacity:1;
+      box-shadow:none
     }
 
     .add-person{
@@ -393,7 +440,9 @@
       height:26px;
       border-radius:8px;
       font-size:16px;
-      font-weight:700
+      font-weight:700;
+      cursor:pointer;
+      transition:.2s ease
     }
 
     .add-box{
@@ -404,7 +453,10 @@
       border-radius:13px;
       color:rgba(35,133,255,.35);
       font-size:24px;
-      font-weight:700
+      font-weight:700;
+      cursor:pointer;
+      box-shadow:0 6px 14px rgba(19,74,145,.05);
+      transition:.2s ease
     }
 
     .add-column{
@@ -415,109 +467,136 @@
       border-radius:13px;
       color:rgba(35,133,255,.35);
       font-size:26px;
-      font-weight:700
+      font-weight:700;
+      cursor:pointer;
+      transition:.2s ease;
+      z-index:2
     }
 
+    .section-add:hover,
+    .top-side-add:hover,
+    .add-person:hover,
+    .add-box:hover,
+    .add-column:hover{
+      background:#eef7ff;
+      border-color:rgba(35,133,255,.45);
+      color:rgba(35,133,255,.62)
+    }
+
+    body.downloading .toolbar,
+    body.downloading .section-add,
+    body.downloading .top-side-add,
+    body.downloading .add-person,
+    body.downloading .add-box,
+    body.downloading .add-column,
+    body.downloading .delete-btn,
+    body.downloading .small-delete{
+      display:none!important
+    }
+
+    body.downloading .box:hover{
+      transform:none!important
+    }
   </style>
 </head>
 <body>
 
-<div class="toolbar">
-  <button class="light-btn" onclick="undoAction()">Undo</button>
-  <button class="light-btn" onclick="redoAction()">Redo</button>
-  <button onclick="downloadCSV()">Download CSV</button>
-  <button onclick="downloadSVG()">Download SVG</button>
-</div>
-
-<div class="page" id="downloadPage">
-
-  <div class="title-wrap">
-    <h1>Organizational Structure</h1>
-    <div class="title-line"></div>
+  <div class="toolbar">
+    <button class="light-btn" onclick="undoAction()">Undo</button>
+    <button class="light-btn" onclick="redoAction()">Redo</button>
+    <button onclick="downloadCSV()">Download CSV</button>
+    <button onclick="downloadPNG()">Download as PNG</button>
   </div>
 
-  <div class="org-chart">
+  <div class="page" id="downloadPage">
 
-    <div class="top-section" id="topSection">
+    <div class="title-wrap">
+      <h1>Organizational Structure</h1>
+      <div class="title-line"></div>
+    </div>
 
-      <button class="section-add" onclick="addTopSection('above')">+</button>
+    <div class="org-chart">
 
-      <div class="top-row-wrap">
+      <div class="top-section" id="topSection">
 
-        <div class="top-row" id="topRow">
+        <button class="section-add" onclick="addTopSection('above')">+</button>
 
-          <div class="box main">
-            <button class="delete-btn" onclick="deleteBox(this)">×</button>
-            <input class="post-input" value="" placeholder="Enter Role">
-            <input class="name-input" value="Trupti Latur" placeholder="Enter name here">
+        <div class="top-row-wrap">
+
+          <div class="top-row" id="topRow">
+
+            <div class="box main">
+              <button class="delete-btn" onclick="deleteBox(this)">×</button>
+              <input class="post-input" value="" placeholder="Enter Role">
+              <input class="name-input" value="Trupti Latur" placeholder="Enter name here">
+            </div>
+
+            <div class="box main">
+              <button class="delete-btn" onclick="deleteBox(this)">×</button>
+              <input class="post-input" value="" placeholder="Enter Role">
+              <input class="name-input" value="Ankit Jayant" placeholder="Enter name here">
+            </div>
+
+            <div class="box main">
+              <button class="delete-btn" onclick="deleteBox(this)">×</button>
+              <input class="post-input" value="Founder" placeholder="Enter Role">
+              <input class="name-input" value="" placeholder="Enter name here">
+            </div>
+
           </div>
 
-          <div class="box main">
-            <button class="delete-btn" onclick="deleteBox(this)">×</button>
-            <input class="post-input" value="" placeholder="Enter Role">
-            <input class="name-input" value="Ankit Jayant" placeholder="Enter name here">
-          </div>
-
-          <div class="box main">
-            <button class="delete-btn" onclick="deleteBox(this)">×</button>
-            <input class="post-input" value="Founder" placeholder="Enter Role">
-            <input class="name-input" value="" placeholder="Enter name here">
-          </div>
+          <button class="top-side-add" onclick="addTopBox(this)">+</button>
 
         </div>
 
-        <button class="top-side-add" onclick="addTopBox(this)">+</button>
+        <button class="section-add" onclick="addTopSection('below')">+</button>
 
       </div>
 
-      <button class="section-add" onclick="addTopSection('below')">+</button>
+      <div class="connector-main"></div>
+
+      <div class="chief-row-wrap">
+        <div class="chief-row" id="chiefRow"></div>
+      </div>
+
+      <div class="department-grid" id="departmentGrid"></div>
 
     </div>
-
-    <div class="connector-main"></div>
-
-    <div class="chief-row-wrap">
-      <div class="chief-row" id="chiefRow"></div>
-    </div>
-
-    <div class="department-grid" id="departmentGrid"></div>
-
   </div>
-</div>
 
 <script>
 
 var data=[
- {chief:"Chief Technology Officer",teams:[
+ {chief:"Chief Technology Officer",name:"",teams:[
   {title:"AI / ML Team",roles:["NLP Engineer","ML Engineer","Data Scientist"]},
   {title:"Engineering Team",roles:["Backend Developer","Frontend Developer","DevOps Engineer"]},
   {title:"Data Team",roles:["Data Engineer","Data Analyst"]},
   {title:"Security Team",roles:["Security Engineer","Threat Analyst"]}
  ]},
- {chief:"Chief Product Officer",teams:[
+ {chief:"Chief Product Officer",name:"",teams:[
   {title:"Product Team",roles:["Product Manager","UX / UI Designer"]},
   {title:"Recommendation Team",roles:["Recommendation Engineer","ML Engineer"]}
  ]},
- {chief:"Chief Business Officer",teams:[
+ {chief:"Chief Business Officer",name:"",teams:[
   {title:"Business Team",roles:["Business Development Manager","Strategy Manager"]},
   {title:"Sales Team",roles:["Sales Manager","Account Manager"]},
   {title:"Partnership Team",roles:["Partnership Manager","Alliance Manager"]}
  ]},
- {chief:"Chief Marketing Officer",teams:[
+ {chief:"Chief Marketing Officer",name:"",teams:[
   {title:"Marketing Team",roles:["Performance Marketer","Social Media Manager"]},
   {title:"Creator Ecosystem Team",roles:["Creator Manager","Creator Strategist"]},
   {title:"Content Team",roles:["Script Writer","Editor"]}
  ]},
- {chief:"Chief Operating Officer",teams:[
+ {chief:"Chief Operating Officer",name:"",teams:[
   {title:"Operations Team",roles:["Operations Manager","Process Analyst"]},
   {title:"Support Team",roles:["Customer Support","Creator Support"]},
   {title:"Moderation Team",roles:["Moderators","AI Moderation Ops"]}
  ]},
- {chief:"Chief Financial Officer",teams:[
+ {chief:"Chief Financial Officer",name:"",teams:[
   {title:"Finance Team",roles:["Accountant","Financial Analyst"]},
   {title:"Ads / Monetization Team",roles:["Ad Operations","Yield Manager"]}
  ]},
- {chief:"Chief Human Resources Officer",teams:[
+ {chief:"Chief Human Resources Officer",name:"",teams:[
   {title:"HR Team",roles:["Recruiter","HR Operations"]},
   {title:"AI Training Team",roles:["AI Trainers","Linguists"]}
  ]}
@@ -525,89 +604,226 @@ var data=[
 
 var undoStack=[];
 var redoStack=[];
+var isRestoring=false;
+var activeEditInput=null;
+var activeEditOldValue=null;
+var activeEditOldFontSize=null;
 
 function chartHTML(){
  return document.querySelector(".org-chart").innerHTML;
 }
 
-function saveState(){
- undoStack.push(chartHTML());
- if(undoStack.length>100) undoStack.shift();
+function pushUndo(action){
+ if(isRestoring || !action)return;
+ undoStack.push(action);
+ if(undoStack.length>120)undoStack.shift();
  redoStack=[];
 }
 
+function saveState(){
+ commitActiveEdit();
+ pushUndo({type:"snapshot",html:chartHTML()});
+}
+
 function restoreState(html){
+ isRestoring=true;
  document.querySelector(".org-chart").innerHTML=html;
- setupInputs();
  updateGridColumns();
+ setupExistingInputs();
+ activeEditInput=null;
+ activeEditOldValue=null;
+ activeEditOldFontSize=null;
+ isRestoring=false;
+}
+
+function applyInputValue(input,value,fontSize){
+ if(!input)return;
+ input.value=value;
+ if(fontSize){input.style.fontSize=fontSize;}
+ autoFitInput(input);
+}
+
+function commitActiveEdit(){
+ if(!activeEditInput)return;
+ var newValue=activeEditInput.value;
+
+ if(newValue!==activeEditOldValue){
+  pushUndo({
+   type:"input",
+   input:activeEditInput,
+   oldValue:activeEditOldValue,
+   newValue:newValue,
+   oldFontSize:activeEditOldFontSize,
+   newFontSize:activeEditInput.style.fontSize
+  });
+ }
+
+ activeEditInput=null;
+ activeEditOldValue=null;
+ activeEditOldFontSize=null;
 }
 
 function undoAction(){
- if(!undoStack.length)return;
- redoStack.push(chartHTML());
- restoreState(undoStack.pop());
+
+ if(activeEditInput){
+
+  var inputNow=activeEditInput;
+  var oldValueNow=activeEditOldValue;
+  var oldFontNow=activeEditOldFontSize;
+  var newValueNow=inputNow.value;
+  var newFontNow=inputNow.style.fontSize;
+
+  if(newValueNow!==oldValueNow){
+
+   redoStack.push({
+    type:"input",
+    input:inputNow,
+    oldValue:oldValueNow,
+    newValue:newValueNow,
+    oldFontSize:oldFontNow,
+    newFontSize:newFontNow
+   });
+
+   applyInputValue(inputNow,oldValueNow,oldFontNow);
+  }
+
+  activeEditInput=null;
+  activeEditOldValue=null;
+  activeEditOldFontSize=null;
+  return;
+ }
+
+ if(undoStack.length===0)return;
+
+ var action=undoStack.pop();
+
+ if(action.type==="input"){
+  redoStack.push(action);
+  applyInputValue(action.input,action.oldValue,action.oldFontSize);
+  return;
+ }
+
+ if(action.type==="snapshot"){
+  redoStack.push({type:"snapshot",html:chartHTML()});
+  restoreState(action.html);
+ }
+
 }
 
 function redoAction(){
- if(!redoStack.length)return;
- undoStack.push(chartHTML());
- restoreState(redoStack.pop());
+
+ commitActiveEdit();
+
+ if(redoStack.length===0)return;
+
+ var action=redoStack.pop();
+
+ if(action.type==="input"){
+  undoStack.push(action);
+  applyInputValue(action.input,action.newValue,action.newFontSize);
+  return;
+ }
+
+ if(action.type==="snapshot"){
+  undoStack.push({type:"snapshot",html:chartHTML()});
+  restoreState(action.html);
+ }
+
 }
 
-function setupInputs(){
- document.querySelectorAll("input").forEach(function(input){
-  input.onfocus=function(){
-   saveState();
-  };
+function setupInput(input){
+
+ input.addEventListener("focus",function(){
+  activeEditInput=input;
+  activeEditOldValue=input.value;
+  activeEditOldFontSize=input.style.fontSize;
  });
+
+ input.addEventListener("input",function(){
+  autoFitInput(input);
+ });
+
+ input.addEventListener("blur",function(){
+  commitActiveEdit();
+ });
+
+ autoFitInput(input);
+}
+
+function setupExistingInputs(){
+ document.querySelectorAll("input").forEach(setupInput);
+}
+
+function autoFitInput(input){
+
+ var text=(input.value || input.placeholder || "");
+ var len=text.length;
+
+ if(input.classList.contains("post-input")){
+
+  if(len>28){input.style.fontSize="12px";}
+  else if(len>22){input.style.fontSize="13px";}
+  else if(len>17){input.style.fontSize="14px";}
+  else{input.style.fontSize=input.closest(".box.main")?"20px":"15px";}
+ }
+
+ if(input.classList.contains("role-input") || input.classList.contains("role-name-input")){
+
+  if(len>22){input.style.fontSize="10px";}
+  else{input.style.fontSize="11px";}
+ }
 }
 
 function makeInput(className,value,placeholder){
+
  var input=document.createElement("input");
+
  input.className=className;
  input.value=value||"";
  input.placeholder=placeholder||"";
+
+ setupInput(input);
+
  return input;
 }
 
-function makeDeleteButton(fn){
- var btn=document.createElement("button");
- btn.className="delete-btn";
- btn.textContent="×";
- btn.setAttribute("onclick",fn+"(this)");
- return btn;
+function makeDeleteButton(functionName){
+
+ var button=document.createElement("button");
+
+ button.className=functionName==="deletePerson"?"small-delete":"delete-btn";
+ button.textContent="×";
+ button.setAttribute("onclick",functionName+"(this)");
+
+ return button;
 }
 
 function makeTopMainBox(role,name){
+
  var box=document.createElement("div");
+
  box.className="box main";
+
  box.appendChild(makeDeleteButton("deleteBox"));
- box.appendChild(makeInput("post-input",role,"Enter Role"));
- box.appendChild(makeInput("name-input",name,"Enter name here"));
+ box.appendChild(makeInput("post-input",role||"","Enter Role"));
+ box.appendChild(makeInput("name-input",name||"","Enter name here"));
+
  return box;
 }
 
 function makePersonCard(role){
+
  var card=document.createElement("div");
  card.className="person-card";
 
  var fields=document.createElement("div");
  fields.className="person-fields";
 
- fields.appendChild(makeInput("role-input",role,"Enter role"));
+ fields.appendChild(makeInput("role-input",role||"","Enter role"));
  fields.appendChild(makeInput("role-name-input","","Enter name"));
 
  card.appendChild(fields);
-
- var del=document.createElement("button");
- del.className="small-delete";
- del.innerHTML="×";
- del.onclick=function(){
-  saveState();
-  card.remove();
- };
-
- card.appendChild(del);
+ card.appendChild(makeDeleteButton("deletePerson"));
 
  return card;
 }
@@ -615,14 +831,14 @@ function makePersonCard(role){
 function makeTeamBox(title,roles){
 
  var box=document.createElement("div");
- box.className="box";
+ box.className="box team";
 
  box.appendChild(makeDeleteButton("deleteBox"));
 
  var head=document.createElement("div");
  head.className="team-title";
 
- head.appendChild(makeInput("post-input",title,"Enter team"));
+ head.appendChild(makeInput("post-input",title||"","Enter team/post"));
  head.appendChild(makeInput("name-input","","Enter team head name"));
 
  box.appendChild(head);
@@ -630,62 +846,60 @@ function makeTeamBox(title,roles){
  var list=document.createElement("div");
  list.className="person-list";
 
- roles.forEach(function(role){
+ (roles||[""]).forEach(function(role){
   list.appendChild(makePersonCard(role));
  });
 
- var add=document.createElement("button");
- add.className="add-person";
- add.innerHTML="+";
- add.onclick=function(){
-  saveState();
-  list.insertBefore(makePersonCard(""),add);
- };
+ var addButton=document.createElement("button");
 
- list.appendChild(add);
+ addButton.className="add-person";
+ addButton.textContent="+";
+ addButton.setAttribute("onclick","addPerson(this)");
+
+ list.appendChild(addButton);
 
  box.appendChild(list);
 
  return box;
 }
 
-function makeChiefNode(title){
+function makeChiefNode(chief,name){
 
  var node=document.createElement("div");
  node.className="chief-node";
 
  var box=document.createElement("div");
- box.className="box";
+ box.className="box chief";
 
  box.appendChild(makeDeleteButton("deleteColumn"));
 
- box.appendChild(makeInput("post-input",title,"Enter Post"));
- box.appendChild(makeInput("name-input","","Enter name here"));
+ box.appendChild(makeInput("post-input",chief||"","Enter Post"));
+ box.appendChild(makeInput("name-input",name||"","Enter name here"));
 
  node.appendChild(box);
 
  return node;
 }
 
-function makeDepartmentCol(teams){
+function makeDepartmentCol(teams,withDefaultTeam){
 
  var col=document.createElement("div");
  col.className="department-col";
 
- teams.forEach(function(team){
-  col.appendChild(makeTeamBox(team.title,team.roles));
- });
+ if(withDefaultTeam!==false){
 
- var add=document.createElement("button");
- add.className="add-box";
- add.innerHTML="+";
+  (teams||[{title:"",roles:[""]}]).forEach(function(team){
+   col.appendChild(makeTeamBox(team.title,team.roles));
+  });
+ }
 
- add.onclick=function(){
-  saveState();
-  col.insertBefore(makeTeamBox("",[""]),add);
- };
+ var addBox=document.createElement("button");
 
- col.appendChild(add);
+ addBox.className="add-box";
+ addBox.textContent="+";
+ addBox.setAttribute("onclick","addTeamBox(this)");
+
+ col.appendChild(addBox);
 
  return col;
 }
@@ -697,47 +911,43 @@ function renderInitial(){
 
  data.forEach(function(item){
 
-  chiefRow.appendChild(makeChiefNode(item.chief));
-  grid.appendChild(makeDepartmentCol(item.teams));
+  chiefRow.appendChild(makeChiefNode(item.chief,item.name));
+  grid.appendChild(makeDepartmentCol(item.teams,true));
 
  });
 
- var addColumn=document.createElement("button");
+ var addColumnButton=document.createElement("button");
 
- addColumn.className="add-column";
- addColumn.innerHTML="+";
+ addColumnButton.className="add-column";
+ addColumnButton.textContent="+";
+ addColumnButton.setAttribute("onclick","addColumn()");
 
- addColumn.onclick=function(){
-
-  saveState();
-
-  chiefRow.insertBefore(makeChiefNode(""),addColumn);
-  grid.appendChild(makeDepartmentCol([]));
-
-  updateGridColumns();
- };
-
- chiefRow.appendChild(addColumn);
+ chiefRow.appendChild(addColumnButton);
 
  updateGridColumns();
- setupInputs();
 }
 
 function updateGridColumns(){
 
- var count=document.querySelectorAll("#chiefRow .chief-node").length;
+ var chiefRow=document.getElementById("chiefRow");
+ var grid=document.getElementById("departmentGrid");
 
- var template="repeat("+count+",220px) 54px";
+ if(!chiefRow || !grid)return;
 
- document.getElementById("chiefRow").style.gridTemplateColumns=template;
- document.getElementById("departmentGrid").style.gridTemplateColumns=template;
+ var chiefCount=document.querySelectorAll("#chiefRow .chief-node").length;
+
+ var template="repeat("+chiefCount+", 220px) 54px";
+
+ chiefRow.style.gridTemplateColumns=template;
+ grid.style.gridTemplateColumns=template;
 }
 
-function addTopBox(btn){
+function addTopBox(button){
 
  saveState();
 
- var row=btn.parentElement.querySelector(".top-row");
+ var wrap=button.closest(".top-row-wrap");
+ var row=wrap.querySelector(".top-row");
 
  row.appendChild(makeTopMainBox("",""));
 }
@@ -746,52 +956,122 @@ function addTopSection(position){
 
  saveState();
 
- var section=document.getElementById("topSection");
+ var topSection=document.getElementById("topSection");
 
- var wrap=document.createElement("div");
- wrap.className="top-row-wrap";
+ var newRowWrap=document.createElement("div");
+ newRowWrap.className="top-row-wrap";
 
- var row=document.createElement("div");
- row.className="top-row";
+ var newRow=document.createElement("div");
+ newRow.className="top-row";
 
- row.appendChild(makeTopMainBox("",""));
+ newRow.appendChild(makeTopMainBox("",""));
 
- var add=document.createElement("button");
- add.className="top-side-add";
- add.innerHTML="+";
- add.onclick=function(){
-  addTopBox(add);
+ var addBtn=document.createElement("button");
+
+ addBtn.className="top-side-add";
+ addBtn.textContent="+";
+
+ addBtn.onclick=function(){
+  addTopBox(addBtn);
  };
 
- wrap.appendChild(row);
- wrap.appendChild(add);
+ newRowWrap.appendChild(newRow);
+ newRowWrap.appendChild(addBtn);
 
  if(position==="above"){
-  section.insertBefore(wrap,section.children[1]);
+  topSection.insertBefore(newRowWrap,topSection.children[1]);
  }else{
-  section.insertBefore(wrap,section.lastElementChild);
+  topSection.insertBefore(newRowWrap,topSection.lastElementChild);
  }
 }
 
-function deleteBox(btn){
+function addColumn(){
 
  saveState();
 
- var box=btn.closest(".box");
- if(box) box.remove();
+ var chiefRow=document.getElementById("chiefRow");
+ var grid=document.getElementById("departmentGrid");
+
+ var addButton=chiefRow.querySelector(".add-column");
+
+ chiefRow.insertBefore(makeChiefNode("",""),addButton);
+
+ grid.appendChild(makeDepartmentCol([],false));
+
+ updateGridColumns();
 }
 
-function deleteColumn(btn){
+function addTeamBox(button){
 
  saveState();
 
- var node=btn.closest(".chief-node");
+ var col=button.closest(".department-col");
 
- var nodes=[...document.querySelectorAll("#chiefRow .chief-node")];
+ col.insertBefore(makeTeamBox("",[""]),button);
+}
+
+function addPerson(button){
+
+ saveState();
+
+ button.parentElement.insertBefore(makePersonCard(""),button);
+}
+
+function deletePerson(button){
+
+ saveState();
+
+ var personCard=button.closest(".person-card");
+
+ if(personCard){
+  personCard.remove();
+ }
+}
+
+function deleteBox(button){
+
+ saveState();
+
+ var box=button.closest(".box");
+ var topWrap=box.closest(".top-row-wrap");
+
+ if(box){
+  box.remove();
+ }
+
+ if(topWrap){
+
+  var boxes=topWrap.querySelectorAll(".box.main");
+  var totalTopRows=document.querySelectorAll(".top-row-wrap").length;
+
+  if(boxes.length===0 && totalTopRows>1){
+   topWrap.remove();
+  }
+ }
+}
+
+function deleteColumn(button){
+
+ commitActiveEdit();
+
+ var node=button.closest(".chief-node");
+
+ var nodes=Array.prototype.slice.call(document.querySelectorAll("#chiefRow .chief-node"));
+
+ if(nodes.length<=1){
+  alert("At least one column should remain.");
+  return;
+ }
+
+ saveState();
 
  var index=nodes.indexOf(node);
 
- document.querySelectorAll(".department-col")[index].remove();
+ var cols=document.querySelectorAll("#departmentGrid .department-col");
+
+ if(cols[index]){
+  cols[index].remove();
+ }
 
  node.remove();
 
@@ -799,22 +1079,73 @@ function deleteColumn(btn){
 }
 
 function csvEscape(value){
- return '"'+String(value||"").replace(/"/g,'""')+'"';
+
+ var text=String(value||"").replace(/\r/g," ").replace(/\n/g," ").trim();
+
+ return '"'+text.replace(/"/g,'""')+'"';
+}
+
+function addCSVRow(rows,role,name){
+
+ role=String(role||"").trim();
+ name=String(name||"").trim();
+
+ if(role || name){
+  rows.push([role,name]);
+ }
 }
 
 function downloadCSV(){
 
- var rows=[["Role Name","Person Name"]];
+ commitActiveEdit();
 
- document.querySelectorAll("input").forEach(function(input){
+ var rows=[];
 
-  if(input.classList.contains("post-input") || input.classList.contains("role-input")){
-   rows.push([input.value,""]);
-  }
+ rows.push(["Role Name","Person Name"]);
+
+ document.querySelectorAll(".top-row .box.main").forEach(function(box){
+
+  addCSVRow(
+   rows,
+   box.querySelector(".post-input").value,
+   box.querySelector(".name-input").value
+  );
 
  });
 
- var csv=rows.map(r=>r.map(csvEscape).join(",")).join("\n");
+ document.querySelectorAll("#chiefRow .chief-node").forEach(function(node){
+
+  addCSVRow(
+   rows,
+   node.querySelector(".post-input").value,
+   node.querySelector(".name-input").value
+  );
+
+ });
+
+ document.querySelectorAll(".box.team").forEach(function(team){
+
+  addCSVRow(
+   rows,
+   team.querySelector(".team-title .post-input").value,
+   team.querySelector(".team-title .name-input").value
+  );
+
+  team.querySelectorAll(".person-card").forEach(function(card){
+
+   addCSVRow(
+    rows,
+    card.querySelector(".role-input").value,
+    card.querySelector(".role-name-input").value
+   );
+
+  });
+
+ });
+
+ var csv=rows.map(function(row){
+  return row.map(csvEscape).join(",");
+ }).join("\n");
 
  var blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
 
@@ -826,68 +1157,63 @@ function downloadCSV(){
  document.body.appendChild(link);
  link.click();
  document.body.removeChild(link);
-}
-
-function downloadSVG(){
-
- var page=document.getElementById("downloadPage");
-
- var clone=page.cloneNode(true);
-
- clone.querySelectorAll("button").forEach(function(btn){
-  btn.remove();
- });
-
- clone.querySelectorAll("input").forEach(function(input){
-
-  var div=document.createElement("div");
-
-  div.className=input.className;
-  div.textContent=input.value || input.placeholder || "";
-
-  div.style.cssText=window.getComputedStyle(input).cssText;
-
-  input.parentNode.replaceChild(div,input);
-
- });
-
- var width=page.scrollWidth;
- var height=page.scrollHeight;
-
- var css=document.querySelector("style").innerHTML;
-
- clone.setAttribute("xmlns","http://www.w3.org/1999/xhtml");
-
- var serializer=new XMLSerializer();
-
- var cloneHTML=serializer.serializeToString(clone);
-
- var svg=
-'<?xml version="1.0" encoding="UTF-8"?>'+
-'<svg xmlns="http://www.w3.org/2000/svg" width="'+width+'" height="'+height+'" viewBox="0 0 '+width+' '+height+'">'+
-'<foreignObject width="100%" height="100%">'+
-'<div xmlns="http://www.w3.org/1999/xhtml">'+
-'<style><![CDATA['+css+']]></style>'+
-cloneHTML+
-'</div>'+
-'</foreignObject>'+
-'</svg>';
-
- var blob=new Blob([svg],{type:"image/svg+xml;charset=utf-8"});
-
- var link=document.createElement("a");
-
- link.href=URL.createObjectURL(blob);
- link.download="organizational-structure.svg";
-
- document.body.appendChild(link);
- link.click();
- document.body.removeChild(link);
 
  URL.revokeObjectURL(link.href);
 }
 
+function downloadPNG(){
+
+ commitActiveEdit();
+
+ if(typeof html2canvas==="undefined"){
+  alert("Image library not loaded.");
+  return;
+ }
+
+ var page=document.getElementById("downloadPage");
+
+ document.body.classList.add("downloading");
+
+ setTimeout(function(){
+
+  html2canvas(page,{
+   backgroundColor:"#f8fbff",
+   scale:2,
+   useCORS:true,
+   width:page.scrollWidth,
+   height:page.scrollHeight,
+   windowWidth:page.scrollWidth,
+   windowHeight:page.scrollHeight,
+   scrollX:0,
+   scrollY:0
+  }).then(function(canvas){
+
+   var link=document.createElement("a");
+
+   link.download="organizational-structure.png";
+   link.href=canvas.toDataURL("image/png");
+
+   document.body.appendChild(link);
+
+   link.click();
+
+   document.body.removeChild(link);
+
+   document.body.classList.remove("downloading");
+
+  }).catch(function(){
+
+   document.body.classList.remove("downloading");
+
+   alert("PNG download failed.");
+
+  });
+
+ },150);
+}
+
 renderInitial();
+setupExistingInputs();
 
 </script>
 
