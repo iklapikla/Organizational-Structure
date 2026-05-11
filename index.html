@@ -4,9 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Editable Organizational Structure</title>
+
   <style>
-    *{box-sizing:border-box;margin:0;padding:0;font-family:Inter,Arial,sans-serif}
-    html,body{min-height:100%;background:#f8fbff}
+    *{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+      font-family:Inter,Arial,sans-serif
+    }
+
+    html,body{
+      min-height:100%;
+      background:#f8fbff
+    }
+
     body{
       min-height:100vh;
       background:linear-gradient(135deg,#f8fbff 0%,#ffffff 48%,#f8fbff 100%);
@@ -14,195 +25,499 @@
       color:#0d2865;
       overflow:auto
     }
+
     .toolbar{
-      position:fixed;top:16px;right:18px;z-index:1000;
-      display:flex;gap:8px;align-items:center
+      position:fixed;
+      top:16px;
+      right:18px;
+      z-index:1000;
+      display:flex;
+      gap:8px;
+      align-items:center
     }
+
     .toolbar button{
-      border:0;background:linear-gradient(135deg,#1479ff,#0058d8);color:#fff;
-      padding:10px 14px;border-radius:12px;font-size:13px;font-weight:850;cursor:pointer;
+      border:0;
+      background:linear-gradient(135deg,#1479ff,#0058d8);
+      color:#fff;
+      padding:10px 14px;
+      border-radius:12px;
+      font-size:13px;
+      font-weight:850;
+      cursor:pointer;
       box-shadow:0 10px 22px rgba(20,121,255,.22)
     }
+
     .toolbar .light-btn{
-      background:#ffffff;color:#1479ff;border:1px solid #cfe3ff;
+      background:#ffffff;
+      color:#1479ff;
+      border:1px solid #cfe3ff;
       box-shadow:0 8px 18px rgba(19,74,145,.10)
     }
+
     .page{
       width:max-content;
       min-width:1900px;
       padding:28px 34px 60px;
       background:transparent
     }
-    .title-wrap{text-align:center;margin-bottom:26px}
-    .title-wrap h1{font-size:52px;line-height:1;font-weight:900;color:#09235f;letter-spacing:-1px}
-    .title-line{width:82px;height:5px;background:#2385ff;border-radius:50px;margin:12px auto 0;box-shadow:0 6px 18px rgba(35,133,255,.3)}
-    .org-chart{position:relative;width:100%}
 
-    .top-section{display:flex;flex-direction:column;align-items:center;margin-bottom:38px;position:relative}
+    .title-wrap{
+      text-align:center;
+      margin-bottom:26px
+    }
+
+    .title-wrap h1{
+      font-size:52px;
+      line-height:1;
+      font-weight:900;
+      color:#09235f;
+      letter-spacing:-1px
+    }
+
+    .title-line{
+      width:82px;
+      height:5px;
+      background:#2385ff;
+      border-radius:50px;
+      margin:12px auto 0;
+      box-shadow:0 6px 18px rgba(35,133,255,.3)
+    }
+
+    .org-chart{
+      position:relative;
+      width:100%
+    }
+
+    .top-section{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      margin-bottom:38px;
+      position:relative
+    }
+
     .section-add{
-      border:1px dashed rgba(35,133,255,.20);background:rgba(255,255,255,.42);color:rgba(35,133,255,.35);
-      width:28px;height:28px;border-radius:50%;font-size:17px;font-weight:700;line-height:24px;cursor:pointer;margin:6px 0
-    }
-    .top-row-wrap{position:relative;width:max-content;margin:1px 0}
-    .top-row{
-      display:flex;justify-content:center;align-items:center;gap:78px;position:relative;padding:0 70px;min-height:116px
-    }
-    .top-row:before{
-      content:"";position:absolute;top:50%;left:70px;right:70px;height:1px;background:#d6e0f1;z-index:0
-    }
-    .top-row:empty:before{display:none}
-    .top-row .box{z-index:2;min-height:96px;width:auto;min-width:320px;flex:0 0 auto}
-    .top-side-add{
-      position:absolute;right:18px;top:50%;transform:translateY(-50%);
-      border:1px dashed rgba(35,133,255,.20);background:rgba(255,255,255,.45);color:rgba(35,133,255,.35);
-      width:30px;height:30px;border-radius:50%;font-size:18px;font-weight:700;cursor:pointer;z-index:3
+      border:1px dashed rgba(35,133,255,.20);
+      background:rgba(255,255,255,.42);
+      color:rgba(35,133,255,.35);
+      width:28px;
+      height:28px;
+      border-radius:50%;
+      font-size:17px;
+      font-weight:700;
+      line-height:24px;
+      cursor:pointer;
+      margin:6px 0
     }
 
-    .connector-main{width:1px;height:38px;background:#d6e0f1;margin:-38px auto 0}
-    .chief-row-wrap{position:relative;padding-top:38px;margin-bottom:44px}
-    .chief-row-wrap:before{content:"";position:absolute;top:0;left:7%;right:7%;height:1px;background:#d6e0f1;z-index:0}
-    .chief-row,.department-grid{display:grid;grid-template-columns:repeat(7,220px) 54px;gap:24px;align-items:start}
-    .chief-row{align-items:center}
-    .chief-node,.department-col{position:relative;z-index:2}
-    .chief-node:before,.department-col:before{content:"";position:absolute;left:50%;width:1px;background:#d6e0f1;transform:translateX(-50%);z-index:0}
-    .chief-node:before{top:-38px;height:32px}
-    .department-col:before{top:-44px;height:34px}
-    .chief-node:after,.department-col:after{
-      content:"";position:absolute;left:50%;width:6px;height:6px;border:1px solid #c7d6ed;background:#f8fbff;border-radius:50%;transform:translateX(-50%);z-index:1
+    .top-row-wrap{
+      position:relative;
+      width:max-content;
+      margin:1px 0
     }
-    .chief-node:after{top:-41px}.department-col:after{top:-48px}
-    .department-col{display:flex;flex-direction:column;gap:18px;min-height:80px}
+
+    .top-row{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      gap:78px;
+      position:relative;
+      padding:0 70px;
+      min-height:116px
+    }
+
+    .top-row:before{
+      content:"";
+      position:absolute;
+      top:50%;
+      left:70px;
+      right:70px;
+      height:1px;
+      background:#d6e0f1;
+      z-index:0
+    }
+
+    .top-row .box{
+      z-index:2;
+      min-height:96px;
+      width:auto;
+      min-width:320px;
+      flex:0 0 auto
+    }
+
+    .top-side-add{
+      position:absolute;
+      right:18px;
+      top:50%;
+      transform:translateY(-50%);
+      border:1px dashed rgba(35,133,255,.20);
+      background:rgba(255,255,255,.45);
+      color:rgba(35,133,255,.35);
+      width:30px;
+      height:30px;
+      border-radius:50%;
+      font-size:18px;
+      font-weight:700;
+      cursor:pointer;
+      z-index:3
+    }
+
+    .connector-main{
+      width:1px;
+      height:38px;
+      background:#d6e0f1;
+      margin:-38px auto 0
+    }
+
+    .chief-row-wrap{
+      position:relative;
+      padding-top:38px;
+      margin-bottom:44px
+    }
+
+    .chief-row-wrap:before{
+      content:"";
+      position:absolute;
+      top:0;
+      left:7%;
+      right:7%;
+      height:1px;
+      background:#d6e0f1;
+      z-index:0
+    }
+
+    .chief-row,
+    .department-grid{
+      display:grid;
+      grid-template-columns:repeat(7,220px) 54px;
+      gap:24px;
+      align-items:start
+    }
+
+    .chief-node,
+    .department-col{
+      position:relative;
+      z-index:2
+    }
+
+    .chief-node:before,
+    .department-col:before{
+      content:"";
+      position:absolute;
+      left:50%;
+      width:1px;
+      background:#d6e0f1;
+      transform:translateX(-50%);
+      z-index:0
+    }
+
+    .chief-node:before{
+      top:-38px;
+      height:32px
+    }
+
+    .department-col:before{
+      top:-44px;
+      height:34px
+    }
+
+    .chief-node:after,
+    .department-col:after{
+      content:"";
+      position:absolute;
+      left:50%;
+      width:6px;
+      height:6px;
+      border:1px solid #c7d6ed;
+      background:#f8fbff;
+      border-radius:50%;
+      transform:translateX(-50%);
+      z-index:1
+    }
+
+    .chief-node:after{
+      top:-41px
+    }
+
+    .department-col:after{
+      top:-48px
+    }
+
+    .department-col{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+      min-height:80px
+    }
 
     .box{
-      background:rgba(255,255,255,.96);border:1.5px solid #cde0ff;border-radius:13px;
-      box-shadow:0 8px 18px rgba(19,74,145,.13);padding:14px 16px;position:relative;min-height:78px;transition:.2s ease;z-index:5
+      background:rgba(255,255,255,.96);
+      border:1.5px solid #cde0ff;
+      border-radius:13px;
+      box-shadow:0 8px 18px rgba(19,74,145,.13);
+      padding:14px 16px;
+      position:relative;
+      min-height:78px;
+      transition:.2s ease;
+      z-index:5
     }
-    .box:hover{transform:translateY(-2px);box-shadow:0 12px 24px rgba(19,74,145,.18);border-color:#91c2ff}
-    .box.main{text-align:center;padding:18px 20px}.box.chief{min-height:76px}
-    .post-input,.name-input{width:100%;outline:none;text-align:center;position:relative;z-index:6}
+
+    .box.main{
+      text-align:center;
+      padding:18px 20px
+    }
+
+    .post-input,
+    .name-input,
+    .role-input,
+    .role-name-input{
+      width:100%;
+      outline:none
+    }
+
     .post-input{
-      border:0;background:transparent;color:#123678;font-size:15px;font-weight:850;margin-bottom:7px;
-      overflow:visible;text-overflow:unset;white-space:normal;min-height:24px
+      border:0;
+      background:transparent;
+      color:#123678;
+      font-size:15px;
+      font-weight:850;
+      margin-bottom:7px;
+      text-align:center
     }
-    .post-input:focus{background:#f7fbff;border-radius:7px;box-shadow:inset 0 0 0 1px #cfe3ff}
+
     .name-input{
-      border:1px dashed #8dbfff;border-radius:8px;background:#f2f8ff;padding:7px 8px;color:#1976ed;font-size:12px;font-weight:750;
-      overflow:visible;text-overflow:unset
+      border:1px dashed #8dbfff;
+      border-radius:8px;
+      background:#f2f8ff;
+      padding:7px 8px;
+      color:#1976ed;
+      font-size:12px;
+      font-weight:750;
+      text-align:center
     }
-    .name-input::placeholder{color:#a8b2c1}
-    .box.main .post-input{font-size:20px;min-height:27px}.box.main .name-input{font-size:14px}
 
-    .team-title{display:grid;grid-template-columns:1fr;gap:7px;margin-bottom:10px}
-    .team-title .post-input{text-align:left;font-size:15px;margin-bottom:0}.team-title .name-input{text-align:left}
-    .person-list{display:flex;flex-direction:column;gap:7px;margin-top:10px}
-    .person-card{display:grid;grid-template-columns:1fr 24px;gap:6px;align-items:center}
-    .person-fields{display:grid;grid-template-columns:1fr;gap:5px;background:#fbfdff;border:1px solid #dceaff;border-radius:8px;padding:5px}
-    .role-input,.role-name-input{width:100%;border:0;outline:none;border-radius:6px;padding:6px 8px;font-size:11px;position:relative;z-index:6}
-    .role-input{background:#fff;color:#173a78;font-weight:750;box-shadow:inset 0 0 0 1px #e4efff}
-    .role-name-input{background:#f2f8ff;color:#1976ed;font-weight:750;box-shadow:inset 0 0 0 1px #8dbfff}
-    .role-name-input::placeholder{color:#a8b2c1}
+    .team-title{
+      display:grid;
+      gap:7px;
+      margin-bottom:10px
+    }
 
-    .delete-btn,.small-delete{
-      position:absolute;top:7px;right:7px;border:0;width:22px;height:22px;border-radius:50%;background:#fff1f2;color:#e11d48;
-      font-size:14px;font-weight:900;cursor:pointer;line-height:20px;box-shadow:0 3px 8px rgba(225,29,72,.12);opacity:0;transition:.2s ease;z-index:10
+    .team-title .post-input{
+      text-align:left
     }
-    .box:hover .delete-btn{opacity:1}
-    .small-delete{position:static;width:22px;height:22px;font-size:13px;opacity:1;box-shadow:none}
-    .add-person{
-      border:1px dashed rgba(35,133,255,.25);background:rgba(242,248,255,.58);color:rgba(25,118,237,.45);
-      height:26px;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;transition:.2s ease
+
+    .team-title .name-input{
+      text-align:left
     }
-    .add-box{
-      width:100%;min-height:62px;border:1.5px dashed rgba(35,133,255,.20);background:rgba(255,255,255,.5);
-      border-radius:13px;color:rgba(35,133,255,.35);font-size:24px;font-weight:700;cursor:pointer;box-shadow:0 6px 14px rgba(19,74,145,.05);transition:.2s ease
+
+    .person-list{
+      display:flex;
+      flex-direction:column;
+      gap:7px;
+      margin-top:10px
     }
+
+    .person-card{
+      display:grid;
+      grid-template-columns:1fr 24px;
+      gap:6px;
+      align-items:center
+    }
+
+    .person-fields{
+      display:grid;
+      gap:5px;
+      background:#fbfdff;
+      border:1px solid #dceaff;
+      border-radius:8px;
+      padding:5px
+    }
+
+    .role-input{
+      background:#fff;
+      color:#173a78;
+      font-weight:750;
+      border:0;
+      border-radius:6px;
+      padding:6px 8px;
+      box-shadow:inset 0 0 0 1px #e4efff
+    }
+
+    .role-name-input{
+      background:#f2f8ff;
+      color:#1976ed;
+      font-weight:750;
+      border:0;
+      border-radius:6px;
+      padding:6px 8px;
+      box-shadow:inset 0 0 0 1px #8dbfff
+    }
+
+    .delete-btn,
+    .small-delete{
+      position:absolute;
+      top:7px;
+      right:7px;
+      border:0;
+      width:22px;
+      height:22px;
+      border-radius:50%;
+      background:#fff1f2;
+      color:#e11d48;
+      font-size:14px;
+      font-weight:900;
+      cursor:pointer;
+      opacity:0
+    }
+
+    .box:hover .delete-btn{
+      opacity:1
+    }
+
+    .small-delete{
+      position:static;
+      opacity:1
+    }
+
+    .add-person,
+    .add-box,
     .add-column{
-      width:54px;min-height:76px;border:1.5px dashed rgba(35,133,255,.20);background:rgba(255,255,255,.55);
-      border-radius:13px;color:rgba(35,133,255,.35);font-size:26px;font-weight:700;cursor:pointer;transition:.2s ease;z-index:2
+      cursor:pointer
     }
-    .section-add:hover,.top-side-add:hover,.add-person:hover,.add-box:hover,.add-column:hover{
-      background:#eef7ff;border-color:rgba(35,133,255,.45);color:rgba(35,133,255,.62)
+
+    .add-person{
+      border:1px dashed rgba(35,133,255,.25);
+      background:rgba(242,248,255,.58);
+      color:rgba(25,118,237,.45);
+      height:26px;
+      border-radius:8px;
+      font-size:16px;
+      font-weight:700
     }
+
+    .add-box{
+      width:100%;
+      min-height:62px;
+      border:1.5px dashed rgba(35,133,255,.20);
+      background:rgba(255,255,255,.5);
+      border-radius:13px;
+      color:rgba(35,133,255,.35);
+      font-size:24px;
+      font-weight:700
+    }
+
+    .add-column{
+      width:54px;
+      min-height:76px;
+      border:1.5px dashed rgba(35,133,255,.20);
+      background:rgba(255,255,255,.55);
+      border-radius:13px;
+      color:rgba(35,133,255,.35);
+      font-size:26px;
+      font-weight:700
+    }
+
   </style>
 </head>
 <body>
-  <div class="toolbar">
-    <button class="light-btn" onclick="undoAction()">Undo</button>
-    <button class="light-btn" onclick="redoAction()">Redo</button>
-    <button onclick="downloadCSV()">Download CSV</button>
-    <button onclick="downloadSVG()">Download SVG</button>
+
+<div class="toolbar">
+  <button class="light-btn" onclick="undoAction()">Undo</button>
+  <button class="light-btn" onclick="redoAction()">Redo</button>
+  <button onclick="downloadCSV()">Download CSV</button>
+  <button onclick="downloadSVG()">Download SVG</button>
+</div>
+
+<div class="page" id="downloadPage">
+
+  <div class="title-wrap">
+    <h1>Organizational Structure</h1>
+    <div class="title-line"></div>
   </div>
 
-  <div class="page" id="downloadPage">
-    <div class="title-wrap">
-      <h1>Organizational Structure</h1>
-      <div class="title-line"></div>
-    </div>
+  <div class="org-chart">
 
-    <div class="org-chart">
-      <div class="top-section" id="topSection">
-        <button class="section-add" onclick="addTopSection('above')">+</button>
-        <div class="top-row-wrap">
-          <div class="top-row" id="topRow">
-            <div class="box main">
-              <button class="delete-btn" onclick="deleteBox(this)">×</button>
-              <input class="post-input" value="" placeholder="Enter Role">
-              <input class="name-input" value="Trupti Latur" placeholder="Enter name here">
-            </div>
-            <div class="box main">
-              <button class="delete-btn" onclick="deleteBox(this)">×</button>
-              <input class="post-input" value="" placeholder="Enter Role">
-              <input class="name-input" value="Ankit Jayant" placeholder="Enter name here">
-            </div>
-            <div class="box main">
-              <button class="delete-btn" onclick="deleteBox(this)">×</button>
-              <input class="post-input" value="Founder" placeholder="Enter Role">
-              <input class="name-input" value="" placeholder="Enter name here">
-            </div>
+    <div class="top-section" id="topSection">
+
+      <button class="section-add" onclick="addTopSection('above')">+</button>
+
+      <div class="top-row-wrap">
+
+        <div class="top-row" id="topRow">
+
+          <div class="box main">
+            <button class="delete-btn" onclick="deleteBox(this)">×</button>
+            <input class="post-input" value="" placeholder="Enter Role">
+            <input class="name-input" value="Trupti Latur" placeholder="Enter name here">
           </div>
-          <button class="top-side-add" onclick="addTopBox(this)">+</button>
+
+          <div class="box main">
+            <button class="delete-btn" onclick="deleteBox(this)">×</button>
+            <input class="post-input" value="" placeholder="Enter Role">
+            <input class="name-input" value="Ankit Jayant" placeholder="Enter name here">
+          </div>
+
+          <div class="box main">
+            <button class="delete-btn" onclick="deleteBox(this)">×</button>
+            <input class="post-input" value="Founder" placeholder="Enter Role">
+            <input class="name-input" value="" placeholder="Enter name here">
+          </div>
+
         </div>
-        <button class="section-add" onclick="addTopSection('below')">+</button>
+
+        <button class="top-side-add" onclick="addTopBox(this)">+</button>
+
       </div>
 
-      <div class="connector-main"></div>
-      <div class="chief-row-wrap"><div class="chief-row" id="chiefRow"></div></div>
-      <div class="department-grid" id="departmentGrid"></div>
+      <button class="section-add" onclick="addTopSection('below')">+</button>
+
     </div>
+
+    <div class="connector-main"></div>
+
+    <div class="chief-row-wrap">
+      <div class="chief-row" id="chiefRow"></div>
+    </div>
+
+    <div class="department-grid" id="departmentGrid"></div>
+
   </div>
+</div>
 
 <script>
+
 var data=[
- {chief:"Chief Technology Officer",name:"",teams:[
+ {chief:"Chief Technology Officer",teams:[
   {title:"AI / ML Team",roles:["NLP Engineer","ML Engineer","Data Scientist"]},
   {title:"Engineering Team",roles:["Backend Developer","Frontend Developer","DevOps Engineer"]},
   {title:"Data Team",roles:["Data Engineer","Data Analyst"]},
   {title:"Security Team",roles:["Security Engineer","Threat Analyst"]}
  ]},
- {chief:"Chief Product Officer",name:"",teams:[
+ {chief:"Chief Product Officer",teams:[
   {title:"Product Team",roles:["Product Manager","UX / UI Designer"]},
   {title:"Recommendation Team",roles:["Recommendation Engineer","ML Engineer"]}
  ]},
- {chief:"Chief Business Officer",name:"",teams:[
+ {chief:"Chief Business Officer",teams:[
   {title:"Business Team",roles:["Business Development Manager","Strategy Manager"]},
   {title:"Sales Team",roles:["Sales Manager","Account Manager"]},
   {title:"Partnership Team",roles:["Partnership Manager","Alliance Manager"]}
  ]},
- {chief:"Chief Marketing Officer",name:"",teams:[
+ {chief:"Chief Marketing Officer",teams:[
   {title:"Marketing Team",roles:["Performance Marketer","Social Media Manager"]},
   {title:"Creator Ecosystem Team",roles:["Creator Manager","Creator Strategist"]},
   {title:"Content Team",roles:["Script Writer","Editor"]}
  ]},
- {chief:"Chief Operating Officer",name:"",teams:[
+ {chief:"Chief Operating Officer",teams:[
   {title:"Operations Team",roles:["Operations Manager","Process Analyst"]},
   {title:"Support Team",roles:["Customer Support","Creator Support"]},
   {title:"Moderation Team",roles:["Moderators","AI Moderation Ops"]}
  ]},
- {chief:"Chief Financial Officer",name:"",teams:[
+ {chief:"Chief Financial Officer",teams:[
   {title:"Finance Team",roles:["Accountant","Financial Analyst"]},
   {title:"Ads / Monetization Team",roles:["Ad Operations","Yield Manager"]}
  ]},
- {chief:"Chief Human Resources Officer",name:"",teams:[
+ {chief:"Chief Human Resources Officer",teams:[
   {title:"HR Team",roles:["Recruiter","HR Operations"]},
   {title:"AI Training Team",roles:["AI Trainers","Linguists"]}
  ]}
@@ -210,368 +525,371 @@ var data=[
 
 var undoStack=[];
 var redoStack=[];
-var isRestoring=false;
-var activeEditInput=null;
-var activeEditOldValue=null;
-var activeEditOldFontSize=null;
 
 function chartHTML(){
  return document.querySelector(".org-chart").innerHTML;
 }
-function pushUndo(action){
- if(isRestoring || !action)return;
- undoStack.push(action);
- if(undoStack.length>120)undoStack.shift();
+
+function saveState(){
+ undoStack.push(chartHTML());
+ if(undoStack.length>100) undoStack.shift();
  redoStack=[];
 }
-function saveState(){
- commitActiveEdit();
- pushUndo({type:"snapshot",html:chartHTML()});
-}
+
 function restoreState(html){
- isRestoring=true;
  document.querySelector(".org-chart").innerHTML=html;
+ setupInputs();
  updateGridColumns();
- setupExistingInputs();
- activeEditInput=null;
- activeEditOldValue=null;
- activeEditOldFontSize=null;
- isRestoring=false;
 }
-function applyInputValue(input,value,fontSize){
- if(!input)return;
- input.value=value;
- if(fontSize){input.style.fontSize=fontSize;}
- autoFitInput(input);
-}
-function commitActiveEdit(){
- if(!activeEditInput)return;
- var newValue=activeEditInput.value;
- if(newValue!==activeEditOldValue){
-  pushUndo({
-   type:"input",
-   input:activeEditInput,
-   oldValue:activeEditOldValue,
-   newValue:newValue,
-   oldFontSize:activeEditOldFontSize,
-   newFontSize:activeEditInput.style.fontSize
-  });
- }
- activeEditInput=null;
- activeEditOldValue=null;
- activeEditOldFontSize=null;
-}
+
 function undoAction(){
- if(activeEditInput){
-  var inputNow=activeEditInput;
-  var oldValueNow=activeEditOldValue;
-  var oldFontNow=activeEditOldFontSize;
-  var newValueNow=inputNow.value;
-  var newFontNow=inputNow.style.fontSize;
-  if(newValueNow!==oldValueNow){
-   redoStack.push({
-    type:"input",
-    input:inputNow,
-    oldValue:oldValueNow,
-    newValue:newValueNow,
-    oldFontSize:oldFontNow,
-    newFontSize:newFontNow
-   });
-   applyInputValue(inputNow,oldValueNow,oldFontNow);
-  }
-  activeEditInput=null;
-  activeEditOldValue=null;
-  activeEditOldFontSize=null;
-  return;
- }
- if(undoStack.length===0)return;
- var action=undoStack.pop();
- if(action.type==="input"){
-  redoStack.push(action);
-  applyInputValue(action.input,action.oldValue,action.oldFontSize);
-  return;
- }
- if(action.type==="snapshot"){
-  redoStack.push({type:"snapshot",html:chartHTML()});
-  restoreState(action.html);
- }
+ if(!undoStack.length)return;
+ redoStack.push(chartHTML());
+ restoreState(undoStack.pop());
 }
+
 function redoAction(){
- commitActiveEdit();
- if(redoStack.length===0)return;
- var action=redoStack.pop();
- if(action.type==="input"){
-  undoStack.push(action);
-  applyInputValue(action.input,action.newValue,action.newFontSize);
-  return;
- }
- if(action.type==="snapshot"){
-  undoStack.push({type:"snapshot",html:chartHTML()});
-  restoreState(action.html);
- }
+ if(!redoStack.length)return;
+ undoStack.push(chartHTML());
+ restoreState(redoStack.pop());
 }
-function setupInput(input){
- input.addEventListener("focus",function(){
-  activeEditInput=input;
-  activeEditOldValue=input.value;
-  activeEditOldFontSize=input.style.fontSize;
+
+function setupInputs(){
+ document.querySelectorAll("input").forEach(function(input){
+  input.onfocus=function(){
+   saveState();
+  };
  });
- input.addEventListener("input",function(){autoFitInput(input);});
- input.addEventListener("blur",function(){commitActiveEdit();});
- autoFitInput(input);
 }
-function setupExistingInputs(){
- document.querySelectorAll("input").forEach(setupInput);
-}
-function autoFitInput(input){
- var text=(input.value || input.placeholder || "");
- var len=text.length;
- if(input.classList.contains("post-input")){
-  if(len>28){input.style.fontSize="12px";}
-  else if(len>22){input.style.fontSize="13px";}
-  else if(len>17){input.style.fontSize="14px";}
-  else{input.style.fontSize=input.closest(".box.main")?"20px":"15px";}
- }
- if(input.classList.contains("role-input") || input.classList.contains("role-name-input")){
-  if(len>22){input.style.fontSize="10px";}
-  else{input.style.fontSize="11px";}
- }
-}
+
 function makeInput(className,value,placeholder){
  var input=document.createElement("input");
- input.className=className;input.value=value||"";input.placeholder=placeholder||"";
- setupInput(input);
+ input.className=className;
+ input.value=value||"";
+ input.placeholder=placeholder||"";
  return input;
 }
-function makeDeleteButton(functionName){
- var button=document.createElement("button");
- button.className=functionName==="deletePerson"?"small-delete":"delete-btn";
- button.textContent="×";button.setAttribute("onclick",functionName+"(this)");
- return button;
+
+function makeDeleteButton(fn){
+ var btn=document.createElement("button");
+ btn.className="delete-btn";
+ btn.textContent="×";
+ btn.setAttribute("onclick",fn+"(this)");
+ return btn;
 }
+
 function makeTopMainBox(role,name){
  var box=document.createElement("div");
  box.className="box main";
  box.appendChild(makeDeleteButton("deleteBox"));
- box.appendChild(makeInput("post-input",role||"","Enter Role"));
- box.appendChild(makeInput("name-input",name||"","Enter name here"));
+ box.appendChild(makeInput("post-input",role,"Enter Role"));
+ box.appendChild(makeInput("name-input",name,"Enter name here"));
  return box;
 }
+
 function makePersonCard(role){
- var card=document.createElement("div");card.className="person-card";
- var fields=document.createElement("div");fields.className="person-fields";
- fields.appendChild(makeInput("role-input",role||"","Enter role"));
+ var card=document.createElement("div");
+ card.className="person-card";
+
+ var fields=document.createElement("div");
+ fields.className="person-fields";
+
+ fields.appendChild(makeInput("role-input",role,"Enter role"));
  fields.appendChild(makeInput("role-name-input","","Enter name"));
- card.appendChild(fields);card.appendChild(makeDeleteButton("deletePerson"));
+
+ card.appendChild(fields);
+
+ var del=document.createElement("button");
+ del.className="small-delete";
+ del.innerHTML="×";
+ del.onclick=function(){
+  saveState();
+  card.remove();
+ };
+
+ card.appendChild(del);
+
  return card;
 }
+
 function makeTeamBox(title,roles){
- var box=document.createElement("div");box.className="box team";
+
+ var box=document.createElement("div");
+ box.className="box";
+
  box.appendChild(makeDeleteButton("deleteBox"));
- var head=document.createElement("div");head.className="team-title";
- head.appendChild(makeInput("post-input",title||"","Enter team/post"));
+
+ var head=document.createElement("div");
+ head.className="team-title";
+
+ head.appendChild(makeInput("post-input",title,"Enter team"));
  head.appendChild(makeInput("name-input","","Enter team head name"));
+
  box.appendChild(head);
- var list=document.createElement("div");list.className="person-list";
- (roles||[""]).forEach(function(role){list.appendChild(makePersonCard(role));});
- var addButton=document.createElement("button");
- addButton.className="add-person";addButton.textContent="+";
- addButton.setAttribute("onclick","addPerson(this)");
- list.appendChild(addButton);box.appendChild(list);
+
+ var list=document.createElement("div");
+ list.className="person-list";
+
+ roles.forEach(function(role){
+  list.appendChild(makePersonCard(role));
+ });
+
+ var add=document.createElement("button");
+ add.className="add-person";
+ add.innerHTML="+";
+ add.onclick=function(){
+  saveState();
+  list.insertBefore(makePersonCard(""),add);
+ };
+
+ list.appendChild(add);
+
+ box.appendChild(list);
+
  return box;
 }
-function makeChiefNode(chief,name){
- var node=document.createElement("div");node.className="chief-node";
- var box=document.createElement("div");box.className="box chief";
+
+function makeChiefNode(title){
+
+ var node=document.createElement("div");
+ node.className="chief-node";
+
+ var box=document.createElement("div");
+ box.className="box";
+
  box.appendChild(makeDeleteButton("deleteColumn"));
- box.appendChild(makeInput("post-input",chief||"","Enter Post"));
- box.appendChild(makeInput("name-input",name||"","Enter name here"));
+
+ box.appendChild(makeInput("post-input",title,"Enter Post"));
+ box.appendChild(makeInput("name-input","","Enter name here"));
+
  node.appendChild(box);
+
  return node;
 }
-function makeDepartmentCol(teams,withDefaultTeam){
- var col=document.createElement("div");col.className="department-col";
- if(withDefaultTeam!==false){
-  (teams||[{title:"",roles:[""]}]).forEach(function(team){col.appendChild(makeTeamBox(team.title,team.roles));});
- }
- var addBox=document.createElement("button");
- addBox.className="add-box";addBox.textContent="+";
- addBox.setAttribute("onclick","addTeamBox(this)");
- col.appendChild(addBox);
+
+function makeDepartmentCol(teams){
+
+ var col=document.createElement("div");
+ col.className="department-col";
+
+ teams.forEach(function(team){
+  col.appendChild(makeTeamBox(team.title,team.roles));
+ });
+
+ var add=document.createElement("button");
+ add.className="add-box";
+ add.innerHTML="+";
+
+ add.onclick=function(){
+  saveState();
+  col.insertBefore(makeTeamBox("",[""]),add);
+ };
+
+ col.appendChild(add);
+
  return col;
 }
+
 function renderInitial(){
+
  var chiefRow=document.getElementById("chiefRow");
  var grid=document.getElementById("departmentGrid");
+
  data.forEach(function(item){
-  chiefRow.appendChild(makeChiefNode(item.chief,item.name));
-  grid.appendChild(makeDepartmentCol(item.teams,true));
+
+  chiefRow.appendChild(makeChiefNode(item.chief));
+  grid.appendChild(makeDepartmentCol(item.teams));
+
  });
- var addColumnButton=document.createElement("button");
- addColumnButton.className="add-column";addColumnButton.textContent="+";
- addColumnButton.setAttribute("onclick","addColumn()");
- chiefRow.appendChild(addColumnButton);
+
+ var addColumn=document.createElement("button");
+
+ addColumn.className="add-column";
+ addColumn.innerHTML="+";
+
+ addColumn.onclick=function(){
+
+  saveState();
+
+  chiefRow.insertBefore(makeChiefNode(""),addColumn);
+  grid.appendChild(makeDepartmentCol([]));
+
+  updateGridColumns();
+ };
+
+ chiefRow.appendChild(addColumn);
+
  updateGridColumns();
+ setupInputs();
 }
+
 function updateGridColumns(){
- var chiefRow=document.getElementById("chiefRow");
- var grid=document.getElementById("departmentGrid");
- if(!chiefRow || !grid)return;
- var chiefCount=document.querySelectorAll("#chiefRow .chief-node").length;
- var template="repeat("+chiefCount+", 220px) 54px";
- chiefRow.style.gridTemplateColumns=template;
- grid.style.gridTemplateColumns=template;
+
+ var count=document.querySelectorAll("#chiefRow .chief-node").length;
+
+ var template="repeat("+count+",220px) 54px";
+
+ document.getElementById("chiefRow").style.gridTemplateColumns=template;
+ document.getElementById("departmentGrid").style.gridTemplateColumns=template;
 }
-function addTopBox(button){
+
+function addTopBox(btn){
+
  saveState();
- var wrap=button.closest(".top-row-wrap");
- var row=wrap.querySelector(".top-row");
+
+ var row=btn.parentElement.querySelector(".top-row");
+
  row.appendChild(makeTopMainBox("",""));
 }
+
 function addTopSection(position){
+
  saveState();
- var topSection=document.getElementById("topSection");
- var newRowWrap=document.createElement("div");
- newRowWrap.className="top-row-wrap";
- var newRow=document.createElement("div");
- newRow.className="top-row";
- newRow.appendChild(makeTopMainBox("",""));
- var addBtn=document.createElement("button");
- addBtn.className="top-side-add";addBtn.textContent="+";
- addBtn.onclick=function(){addTopBox(addBtn);};
- newRowWrap.appendChild(newRow);newRowWrap.appendChild(addBtn);
- if(position==="above"){topSection.insertBefore(newRowWrap,topSection.children[1]);}
- else{topSection.insertBefore(newRowWrap,topSection.lastElementChild);}
-}
-function addColumn(){
- saveState();
- var chiefRow=document.getElementById("chiefRow");
- var grid=document.getElementById("departmentGrid");
- var addButton=chiefRow.querySelector(".add-column");
- chiefRow.insertBefore(makeChiefNode("",""),addButton);
- grid.appendChild(makeDepartmentCol([],false));
- updateGridColumns();
-}
-function addTeamBox(button){
- saveState();
- var col=button.closest(".department-col");
- col.insertBefore(makeTeamBox("",[""]),button);
-}
-function addPerson(button){
- saveState();
- button.parentElement.insertBefore(makePersonCard(""),button);
-}
-function deletePerson(button){
- saveState();
- var personCard=button.closest(".person-card");
- if(personCard){personCard.remove();}
-}
-function deleteBox(button){
- saveState();
- var box=button.closest(".box");
- var topWrap=box.closest(".top-row-wrap");
- if(box){box.remove();}
- if(topWrap){
-  var boxes=topWrap.querySelectorAll(".box.main");
-  var totalTopRows=document.querySelectorAll(".top-row-wrap").length;
-  if(boxes.length===0 && totalTopRows>1){
-   topWrap.remove();
-  }
+
+ var section=document.getElementById("topSection");
+
+ var wrap=document.createElement("div");
+ wrap.className="top-row-wrap";
+
+ var row=document.createElement("div");
+ row.className="top-row";
+
+ row.appendChild(makeTopMainBox("",""));
+
+ var add=document.createElement("button");
+ add.className="top-side-add";
+ add.innerHTML="+";
+ add.onclick=function(){
+  addTopBox(add);
+ };
+
+ wrap.appendChild(row);
+ wrap.appendChild(add);
+
+ if(position==="above"){
+  section.insertBefore(wrap,section.children[1]);
+ }else{
+  section.insertBefore(wrap,section.lastElementChild);
  }
 }
-function deleteColumn(button){
- commitActiveEdit();
- var node=button.closest(".chief-node");
- var nodes=Array.prototype.slice.call(document.querySelectorAll("#chiefRow .chief-node"));
- if(nodes.length<=1){alert("At least one column should remain.");return;}
+
+function deleteBox(btn){
+
  saveState();
+
+ var box=btn.closest(".box");
+ if(box) box.remove();
+}
+
+function deleteColumn(btn){
+
+ saveState();
+
+ var node=btn.closest(".chief-node");
+
+ var nodes=[...document.querySelectorAll("#chiefRow .chief-node")];
+
  var index=nodes.indexOf(node);
- var cols=document.querySelectorAll("#departmentGrid .department-col");
- if(cols[index]){cols[index].remove();}
- node.remove();updateGridColumns();
+
+ document.querySelectorAll(".department-col")[index].remove();
+
+ node.remove();
+
+ updateGridColumns();
 }
+
 function csvEscape(value){
- var text=String(value||"").replace(/\r/g," ").replace(/\n/g," ").trim();
- return '"'+text.replace(/"/g,'""')+'"';
+ return '"'+String(value||"").replace(/"/g,'""')+'"';
 }
-function addCSVRow(rows,role,name){
- role=String(role||"").trim();
- name=String(name||"").trim();
- if(role || name){rows.push([role,name]);}
-}
+
 function downloadCSV(){
- commitActiveEdit();
- var rows=[];
- rows.push(["Role Name","Person Name"]);
- document.querySelectorAll(".top-row .box.main").forEach(function(box){
-  addCSVRow(rows,box.querySelector(".post-input").value,box.querySelector(".name-input").value);
+
+ var rows=[["Role Name","Person Name"]];
+
+ document.querySelectorAll("input").forEach(function(input){
+
+  if(input.classList.contains("post-input") || input.classList.contains("role-input")){
+   rows.push([input.value,""]);
+  }
+
  });
- document.querySelectorAll("#chiefRow .chief-node").forEach(function(node){
-  addCSVRow(rows,node.querySelector(".post-input").value,node.querySelector(".name-input").value);
- });
- document.querySelectorAll(".box.team").forEach(function(team){
-  addCSVRow(rows,team.querySelector(".team-title .post-input").value,team.querySelector(".team-title .name-input").value);
-  team.querySelectorAll(".person-card").forEach(function(card){
-   addCSVRow(rows,card.querySelector(".role-input").value,card.querySelector(".role-name-input").value);
-  });
- });
- var csv=rows.map(function(row){return row.map(csvEscape).join(",");}).join("\n");
+
+ var csv=rows.map(r=>r.map(csvEscape).join(",")).join("\n");
+
  var blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
+
  var link=document.createElement("a");
- link.href=URL.createObjectURL(blob);link.download="organizational-structure.csv";
- document.body.appendChild(link);link.click();document.body.removeChild(link);
- URL.revokeObjectURL(link.href);
+
+ link.href=URL.createObjectURL(blob);
+ link.download="organizational-structure.csv";
+
+ document.body.appendChild(link);
+ link.click();
+ document.body.removeChild(link);
 }
-function escapeHTML(value){
- return String(value||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-}
+
 function downloadSVG(){
- commitActiveEdit();
+
  var page=document.getElementById("downloadPage");
+
  var clone=page.cloneNode(true);
 
- clone.querySelectorAll("button").forEach(function(btn){btn.remove();});
+ clone.querySelectorAll("button").forEach(function(btn){
+  btn.remove();
+ });
+
  clone.querySelectorAll("input").forEach(function(input){
+
   var div=document.createElement("div");
-  div.className=input.className+" export-input";
+
+  div.className=input.className;
   div.textContent=input.value || input.placeholder || "";
-  div.setAttribute("style",input.getAttribute("style") || "");
+
+  div.style.cssText=window.getComputedStyle(input).cssText;
+
   input.parentNode.replaceChild(div,input);
+
  });
 
  var width=page.scrollWidth;
  var height=page.scrollHeight;
 
  var css=document.querySelector("style").innerHTML;
- css += `
-   .toolbar{display:none!important}
-   .export-input{display:block;line-height:1.25;min-height:20px}
-   .post-input,.name-input,.role-input,.role-name-input{white-space:normal!important}
-   .delete-btn,.small-delete,.section-add,.top-side-add,.add-person,.add-box,.add-column{display:none!important}
-   .box:hover{transform:none!important}
- `;
 
- var xhtml='<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"><head><style>'+css+'</style></head><body>'+clone.outerHTML+'</body></html>';
+ clone.setAttribute("xmlns","http://www.w3.org/1999/xhtml");
 
- var svg =
- '<svg xmlns="http://www.w3.org/2000/svg" width="'+width+'" height="'+height+'" viewBox="0 0 '+width+' '+height+'">' +
- '<foreignObject width="100%" height="100%">' +
- xhtml +
- '</foreignObject>' +
- '</svg>';
+ var serializer=new XMLSerializer();
+
+ var cloneHTML=serializer.serializeToString(clone);
+
+ var svg=
+'<?xml version="1.0" encoding="UTF-8"?>'+
+'<svg xmlns="http://www.w3.org/2000/svg" width="'+width+'" height="'+height+'" viewBox="0 0 '+width+' '+height+'">'+
+'<foreignObject width="100%" height="100%">'+
+'<div xmlns="http://www.w3.org/1999/xhtml">'+
+'<style><![CDATA['+css+']]></style>'+
+cloneHTML+
+'</div>'+
+'</foreignObject>'+
+'</svg>';
 
  var blob=new Blob([svg],{type:"image/svg+xml;charset=utf-8"});
+
  var link=document.createElement("a");
+
  link.href=URL.createObjectURL(blob);
  link.download="organizational-structure.svg";
+
  document.body.appendChild(link);
  link.click();
  document.body.removeChild(link);
+
  URL.revokeObjectURL(link.href);
 }
 
 renderInitial();
-setupExistingInputs();
+
 </script>
+
 </body>
 </html>
