@@ -13,11 +13,18 @@
       linear-gradient(135deg,#f8fbff 0%,#fff 45%,#f4f9ff 100%);
       color:#0d2865;overflow:auto
     }
-    .toolbar{position:fixed;top:16px;right:18px;z-index:1000}
-    .download-btn{
+    .toolbar{
+      position:fixed;top:16px;right:18px;z-index:1000;
+      display:flex;gap:8px;align-items:center
+    }
+    .toolbar button{
       border:0;background:linear-gradient(135deg,#1479ff,#0058d8);color:#fff;
-      padding:12px 18px;border-radius:14px;font-size:14px;font-weight:850;cursor:pointer;
-      box-shadow:0 12px 26px rgba(20,121,255,.25)
+      padding:10px 14px;border-radius:12px;font-size:13px;font-weight:850;cursor:pointer;
+      box-shadow:0 10px 22px rgba(20,121,255,.22)
+    }
+    .toolbar .light-btn{
+      background:#ffffff;color:#1479ff;border:1px solid #cfe3ff;
+      box-shadow:0 8px 18px rgba(19,74,145,.10)
     }
     .page{width:max-content;min-width:1700px;padding:28px 34px 60px}
     .title-wrap{text-align:center;margin-bottom:26px}
@@ -32,11 +39,12 @@
     }
     .top-row-wrap{position:relative;width:max-content;margin:1px 0}
     .top-row{
-      display:flex;justify-content:center;align-items:center;gap:78px;position:relative;padding:0 70px
+      display:flex;justify-content:center;align-items:center;gap:78px;position:relative;padding:0 70px;min-height:116px
     }
     .top-row:before{
       content:"";position:absolute;top:50%;left:70px;right:70px;height:2px;background:#aebbd5;z-index:0
     }
+    .top-row:empty:before{display:none}
     .top-row .box{z-index:1;min-height:96px;width:300px;flex:0 0 300px}
     .top-side-add{
       position:absolute;right:18px;top:50%;transform:translateY(-50%);
@@ -110,7 +118,11 @@
   </style>
 </head>
 <body>
-  <div class="toolbar"><button class="download-btn" onclick="downloadCSV()">Download CSV</button></div>
+  <div class="toolbar">
+    <button class="light-btn" onclick="undoAction()">Undo</button>
+    <button class="light-btn" onclick="redoAction()">Redo</button>
+    <button onclick="downloadCSV()">Download CSV</button>
+  </div>
 
   <div class="page">
     <div class="title-wrap">
@@ -187,9 +199,40 @@ var data=[
  ]}
 ];
 
+var undoStack=[];
+var redoStack=[];
+var isRestoring=false;
+
+function chartHTML(){
+ return document.querySelector(".org-chart").innerHTML;
+}
+function saveState(){
+ if(isRestoring)return;
+ undoStack.push(chartHTML());
+ if(undoStack.length>80)undoStack.shift();
+ redoStack=[];
+}
+function restoreState(html){
+ isRestoring=true;
+ document.querySelector(".org-chart").innerHTML=html;
+ updateGridColumns();
+ isRestoring=false;
+}
+function undoAction(){
+ if(undoStack.length===0)return;
+ redoStack.push(chartHTML());
+ restoreState(undoStack.pop());
+}
+function redoAction(){
+ if(redoStack.length===0)return;
+ undoStack.push(chartHTML());
+ restoreState(redoStack.pop());
+}
+
 function makeInput(className,value,placeholder){
  var input=document.createElement("input");
  input.className=className;input.value=value||"";input.placeholder=placeholder||"";
+ input.addEventListener("focus",saveState);
  return input;
 }
 function makeDeleteButton(functionName){
@@ -263,26 +306,28 @@ function renderInitial(){
  updateGridColumns();
 }
 function updateGridColumns(){
+ var chiefRow=document.getElementById("chiefRow");
+ var grid=document.getElementById("departmentGrid");
+ if(!chiefRow || !grid)return;
  var chiefCount=document.querySelectorAll("#chiefRow .chief-node").length;
  var template="repeat("+chiefCount+", 180px) 54px";
- document.getElementById("chiefRow").style.gridTemplateColumns=template;
- document.getElementById("departmentGrid").style.gridTemplateColumns=template;
+ chiefRow.style.gridTemplateColumns=template;
+ grid.style.gridTemplateColumns=template;
 }
 function addTopBox(button){
+ saveState();
  var wrap=button.closest(".top-row-wrap");
  var row=wrap.querySelector(".top-row");
  row.appendChild(makeTopMainBox("",""));
 }
 function addTopSection(position){
+ saveState();
  var topSection=document.getElementById("topSection");
  var newRowWrap=document.createElement("div");
  newRowWrap.className="top-row-wrap";
  var newRow=document.createElement("div");
  newRow.className="top-row";
-
- /* FIX: top/bottom plus now adds only ONE box, not 3 boxes */
  newRow.appendChild(makeTopMainBox("",""));
-
  var addBtn=document.createElement("button");
  addBtn.className="top-side-add";addBtn.textContent="+";
  addBtn.onclick=function(){addTopBox(addBtn);};
@@ -291,31 +336,43 @@ function addTopSection(position){
  else{topSection.insertBefore(newRowWrap,topSection.lastElementChild);}
 }
 function addColumn(){
+ saveState();
  var chiefRow=document.getElementById("chiefRow");
  var grid=document.getElementById("departmentGrid");
  var addButton=chiefRow.querySelector(".add-column");
-
  chiefRow.insertBefore(makeChiefNode("",""),addButton);
-
- /* FIX: bottom column plus now adds only post column with + below, not team box together */
  grid.appendChild(makeDepartmentCol([],false));
-
  updateGridColumns();
 }
 function addTeamBox(button){
+ saveState();
  var col=button.closest(".department-col");
  col.insertBefore(makeTeamBox("",[""]),button);
 }
-function addPerson(button){button.parentElement.insertBefore(makePersonCard(""),button);}
+function addPerson(button){
+ saveState();
+ button.parentElement.insertBefore(makePersonCard(""),button);
+}
 function deletePerson(button){
+ saveState();
  var personCard=button.closest(".person-card");
  if(personCard){personCard.remove();}
 }
 function deleteBox(button){
+ saveState();
  var box=button.closest(".box");
+ var topWrap=box.closest(".top-row-wrap");
  if(box){box.remove();}
+ if(topWrap){
+  var boxes=topWrap.querySelectorAll(".box.main");
+  var totalTopRows=document.querySelectorAll(".top-row-wrap").length;
+  if(boxes.length===0 && totalTopRows>1){
+   topWrap.remove();
+  }
+ }
 }
 function deleteColumn(button){
+ saveState();
  var node=button.closest(".chief-node");
  var nodes=Array.prototype.slice.call(document.querySelectorAll("#chiefRow .chief-node"));
  if(nodes.length<=1){alert("At least one column should remain.");return;}
@@ -328,29 +385,30 @@ function csvEscape(value){
  var text=String(value||"").replace(/\r/g," ").replace(/\n/g," ").trim();
  return '"'+text.replace(/"/g,'""')+'"';
 }
+function addCSVRow(rows,role,name){
+ role=String(role||"").trim();
+ name=String(name||"").trim();
+ if(role || name){rows.push([role,name]);}
+}
 function downloadCSV(){
  var rows=[];
- rows.push(["Section","Main Post","Main Name","Department Post","Department Name","Team","Team Head Name","Role","Role Name"]);
+ rows.push(["Role Name","Person Name"]);
+
  document.querySelectorAll(".top-row .box.main").forEach(function(box){
-  rows.push(["Top Management",box.querySelector(".post-input").value,box.querySelector(".name-input").value,"","","","","",""]);
+  addCSVRow(rows,box.querySelector(".post-input").value,box.querySelector(".name-input").value);
  });
- var chiefs=Array.prototype.slice.call(document.querySelectorAll("#chiefRow .chief-node"));
- var cols=Array.prototype.slice.call(document.querySelectorAll("#departmentGrid .department-col"));
- chiefs.forEach(function(chief,index){
-  var depPost=chief.querySelector(".post-input").value;
-  var depName=chief.querySelector(".name-input").value;
-  var teams=cols[index]?Array.prototype.slice.call(cols[index].querySelectorAll(".box.team")):[];
-  if(teams.length===0){rows.push(["Department","","",depPost,depName,"","","",""]);}
-  teams.forEach(function(team){
-   var teamTitle=team.querySelector(".team-title .post-input").value;
-   var teamHead=team.querySelector(".team-title .name-input").value;
-   var roles=Array.prototype.slice.call(team.querySelectorAll(".person-card"));
-   if(roles.length===0){rows.push(["Team","","",depPost,depName,teamTitle,teamHead,"",""]);}
-   roles.forEach(function(role){
-    rows.push(["Role","","",depPost,depName,teamTitle,teamHead,role.querySelector(".role-input").value,role.querySelector(".role-name-input").value]);
-   });
+
+ document.querySelectorAll("#chiefRow .chief-node").forEach(function(node){
+  addCSVRow(rows,node.querySelector(".post-input").value,node.querySelector(".name-input").value);
+ });
+
+ document.querySelectorAll(".box.team").forEach(function(team){
+  addCSVRow(rows,team.querySelector(".team-title .post-input").value,team.querySelector(".team-title .name-input").value);
+  team.querySelectorAll(".person-card").forEach(function(card){
+   addCSVRow(rows,card.querySelector(".role-input").value,card.querySelector(".role-name-input").value);
   });
  });
+
  var csv=rows.map(function(row){return row.map(csvEscape).join(",");}).join("\n");
  var blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
  var link=document.createElement("a");
@@ -358,6 +416,7 @@ function downloadCSV(){
  document.body.appendChild(link);link.click();document.body.removeChild(link);
  URL.revokeObjectURL(link.href);
 }
+
 renderInitial();
 </script>
 </body>
