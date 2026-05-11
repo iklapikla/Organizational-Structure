@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Editable Organizational Structure</title>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Inter,Arial,sans-serif}
     html,body{min-height:100%;background:#f8fbff}
@@ -123,6 +124,16 @@
     .section-add:hover,.top-side-add:hover,.add-person:hover,.add-box:hover,.add-column:hover{
       background:#eef7ff;border-color:rgba(35,133,255,.55);color:rgba(35,133,255,.72)
     }
+    body.downloading .toolbar,
+    body.downloading .section-add,
+    body.downloading .top-side-add,
+    body.downloading .add-person,
+    body.downloading .add-box,
+    body.downloading .add-column,
+    body.downloading .delete-btn,
+    body.downloading .small-delete{
+      display:none!important
+    }
   </style>
 </head>
 <body>
@@ -130,9 +141,10 @@
     <button class="light-btn" onclick="undoAction()">Undo</button>
     <button class="light-btn" onclick="redoAction()">Redo</button>
     <button onclick="downloadCSV()">Download CSV</button>
+    <button onclick="downloadImage()">Download Image</button>
   </div>
 
-  <div class="page">
+  <div class="page" id="downloadPage">
     <div class="title-wrap">
       <h1>Organizational Structure</h1>
       <div class="title-line"></div>
@@ -210,78 +222,138 @@ var data=[
 var undoStack=[];
 var redoStack=[];
 var isRestoring=false;
-var activeEditSnapshot=null;
 var activeEditInput=null;
+var activeEditOldValue=null;
+var activeEditOldFontSize=null;
 
 function chartHTML(){
  return document.querySelector(".org-chart").innerHTML;
 }
-function pushUndoState(html){
- if(isRestoring)return;
- if(undoStack.length && undoStack[undoStack.length-1]===html)return;
- if(html===chartHTML())return;
- undoStack.push(html);
- if(undoStack.length>80)undoStack.shift();
+
+function pushUndo(action){
+ if(isRestoring || !action)return;
+ undoStack.push(action);
+ if(undoStack.length>120)undoStack.shift();
  redoStack=[];
 }
+
 function saveState(){
- pushUndoState(chartHTML());
+ commitActiveEdit();
+ pushUndo({type:"snapshot",html:chartHTML()});
 }
+
 function restoreState(html){
  isRestoring=true;
  document.querySelector(".org-chart").innerHTML=html;
  updateGridColumns();
  setupExistingInputs();
- activeEditSnapshot=null;
  activeEditInput=null;
+ activeEditOldValue=null;
+ activeEditOldFontSize=null;
  isRestoring=false;
 }
-function commitActiveEdit(){
- if(!activeEditInput || activeEditSnapshot===null)return;
- var current=chartHTML();
- if(current!==activeEditSnapshot){
-  pushUndoState(activeEditSnapshot);
- }
- activeEditSnapshot=null;
- activeEditInput=null;
-}
-function undoAction(){
- var current=chartHTML();
 
- if(activeEditInput && activeEditSnapshot!==null && current!==activeEditSnapshot){
-  redoStack.push(current);
-  restoreState(activeEditSnapshot);
+function applyInputValue(input,value,fontSize){
+ if(!input)return;
+ input.value=value;
+ if(fontSize){input.style.fontSize=fontSize;}
+ autoFitInput(input);
+}
+
+function commitActiveEdit(){
+ if(!activeEditInput)return;
+ var newValue=activeEditInput.value;
+ if(newValue!==activeEditOldValue){
+  pushUndo({
+   type:"input",
+   input:activeEditInput,
+   oldValue:activeEditOldValue,
+   newValue:newValue,
+   oldFontSize:activeEditOldFontSize,
+   newFontSize:activeEditInput.style.fontSize
+  });
+ }
+ activeEditInput=null;
+ activeEditOldValue=null;
+ activeEditOldFontSize=null;
+}
+
+function undoAction(){
+ if(activeEditInput){
+  var inputNow=activeEditInput;
+  var oldValueNow=activeEditOldValue;
+  var oldFontNow=activeEditOldFontSize;
+  var newValueNow=inputNow.value;
+  var newFontNow=inputNow.style.fontSize;
+
+  if(newValueNow!==oldValueNow){
+   redoStack.push({
+    type:"input",
+    input:inputNow,
+    oldValue:oldValueNow,
+    newValue:newValueNow,
+    oldFontSize:oldFontNow,
+    newFontSize:newFontNow
+   });
+   applyInputValue(inputNow,oldValueNow,oldFontNow);
+  }
+  activeEditInput=null;
+  activeEditOldValue=null;
+  activeEditOldFontSize=null;
   return;
  }
 
  if(undoStack.length===0)return;
- redoStack.push(current);
- restoreState(undoStack.pop());
+ var action=undoStack.pop();
+
+ if(action.type==="input"){
+  redoStack.push(action);
+  applyInputValue(action.input,action.oldValue,action.oldFontSize);
+  return;
+ }
+
+ if(action.type==="snapshot"){
+  redoStack.push({type:"snapshot",html:chartHTML()});
+  restoreState(action.html);
+ }
 }
+
 function redoAction(){
  commitActiveEdit();
  if(redoStack.length===0)return;
- var current=chartHTML();
- if(!undoStack.length || undoStack[undoStack.length-1]!==current){
-  undoStack.push(current);
+ var action=redoStack.pop();
+
+ if(action.type==="input"){
+  undoStack.push(action);
+  applyInputValue(action.input,action.newValue,action.newFontSize);
+  return;
  }
- restoreState(redoStack.pop());
+
+ if(action.type==="snapshot"){
+  undoStack.push({type:"snapshot",html:chartHTML()});
+  restoreState(action.html);
+ }
 }
 
 function setupInput(input){
  input.addEventListener("focus",function(){
-  activeEditSnapshot=chartHTML();
   activeEditInput=input;
+  activeEditOldValue=input.value;
+  activeEditOldFontSize=input.style.fontSize;
  });
- input.addEventListener("input",function(){autoFitInput(input);});
+ input.addEventListener("input",function(){
+  autoFitInput(input);
+ });
  input.addEventListener("blur",function(){
   commitActiveEdit();
  });
  autoFitInput(input);
 }
+
 function setupExistingInputs(){
  document.querySelectorAll("input").forEach(setupInput);
 }
+
 function autoFitInput(input){
  var text=(input.value || input.placeholder || "");
  var len=text.length;
@@ -296,18 +368,24 @@ function autoFitInput(input){
   else{input.style.fontSize="11px";}
  }
 }
+
 function makeInput(className,value,placeholder){
  var input=document.createElement("input");
- input.className=className;input.value=value||"";input.placeholder=placeholder||"";
+ input.className=className;
+ input.value=value||"";
+ input.placeholder=placeholder||"";
  setupInput(input);
  return input;
 }
+
 function makeDeleteButton(functionName){
  var button=document.createElement("button");
  button.className=functionName==="deletePerson"?"small-delete":"delete-btn";
- button.textContent="×";button.setAttribute("onclick",functionName+"(this)");
+ button.textContent="×";
+ button.setAttribute("onclick",functionName+"(this)");
  return button;
 }
+
 function makeTopMainBox(role,name){
  var box=document.createElement("div");
  box.className="box main";
@@ -316,49 +394,73 @@ function makeTopMainBox(role,name){
  box.appendChild(makeInput("name-input",name||"","Enter name here"));
  return box;
 }
+
 function makePersonCard(role){
- var card=document.createElement("div");card.className="person-card";
- var fields=document.createElement("div");fields.className="person-fields";
+ var card=document.createElement("div");
+ card.className="person-card";
+ var fields=document.createElement("div");
+ fields.className="person-fields";
  fields.appendChild(makeInput("role-input",role||"","Enter role"));
  fields.appendChild(makeInput("role-name-input","","Enter name"));
- card.appendChild(fields);card.appendChild(makeDeleteButton("deletePerson"));
+ card.appendChild(fields);
+ card.appendChild(makeDeleteButton("deletePerson"));
  return card;
 }
+
 function makeTeamBox(title,roles){
- var box=document.createElement("div");box.className="box team";
+ var box=document.createElement("div");
+ box.className="box team";
  box.appendChild(makeDeleteButton("deleteBox"));
- var head=document.createElement("div");head.className="team-title";
+
+ var head=document.createElement("div");
+ head.className="team-title";
  head.appendChild(makeInput("post-input",title||"","Enter team/post"));
  head.appendChild(makeInput("name-input","","Enter team head name"));
  box.appendChild(head);
- var list=document.createElement("div");list.className="person-list";
- (roles||[""]).forEach(function(role){list.appendChild(makePersonCard(role));});
+
+ var list=document.createElement("div");
+ list.className="person-list";
+ (roles||[""]).forEach(function(role){
+  list.appendChild(makePersonCard(role));
+ });
+
  var addButton=document.createElement("button");
- addButton.className="add-person";addButton.textContent="+";
+ addButton.className="add-person";
+ addButton.textContent="+";
  addButton.setAttribute("onclick","addPerson(this)");
- list.appendChild(addButton);box.appendChild(list);
+ list.appendChild(addButton);
+ box.appendChild(list);
  return box;
 }
+
 function makeChiefNode(chief,name){
- var node=document.createElement("div");node.className="chief-node";
- var box=document.createElement("div");box.className="box chief";
+ var node=document.createElement("div");
+ node.className="chief-node";
+ var box=document.createElement("div");
+ box.className="box chief";
  box.appendChild(makeDeleteButton("deleteColumn"));
  box.appendChild(makeInput("post-input",chief||"","Enter Post"));
  box.appendChild(makeInput("name-input",name||"","Enter name here"));
  node.appendChild(box);
  return node;
 }
+
 function makeDepartmentCol(teams,withDefaultTeam){
- var col=document.createElement("div");col.className="department-col";
+ var col=document.createElement("div");
+ col.className="department-col";
  if(withDefaultTeam!==false){
-  (teams||[{title:"",roles:[""]}]).forEach(function(team){col.appendChild(makeTeamBox(team.title,team.roles));});
+  (teams||[{title:"",roles:[""]}]).forEach(function(team){
+   col.appendChild(makeTeamBox(team.title,team.roles));
+  });
  }
  var addBox=document.createElement("button");
- addBox.className="add-box";addBox.textContent="+";
+ addBox.className="add-box";
+ addBox.textContent="+";
  addBox.setAttribute("onclick","addTeamBox(this)");
  col.appendChild(addBox);
  return col;
 }
+
 function renderInitial(){
  var chiefRow=document.getElementById("chiefRow");
  var grid=document.getElementById("departmentGrid");
@@ -367,11 +469,13 @@ function renderInitial(){
   grid.appendChild(makeDepartmentCol(item.teams,true));
  });
  var addColumnButton=document.createElement("button");
- addColumnButton.className="add-column";addColumnButton.textContent="+";
+ addColumnButton.className="add-column";
+ addColumnButton.textContent="+";
  addColumnButton.setAttribute("onclick","addColumn()");
  chiefRow.appendChild(addColumnButton);
  updateGridColumns();
 }
+
 function updateGridColumns(){
  var chiefRow=document.getElementById("chiefRow");
  var grid=document.getElementById("departmentGrid");
@@ -381,27 +485,39 @@ function updateGridColumns(){
  chiefRow.style.gridTemplateColumns=template;
  grid.style.gridTemplateColumns=template;
 }
+
 function addTopBox(button){
  saveState();
  var wrap=button.closest(".top-row-wrap");
  var row=wrap.querySelector(".top-row");
  row.appendChild(makeTopMainBox("",""));
 }
+
 function addTopSection(position){
  saveState();
  var topSection=document.getElementById("topSection");
  var newRowWrap=document.createElement("div");
  newRowWrap.className="top-row-wrap";
+
  var newRow=document.createElement("div");
  newRow.className="top-row";
  newRow.appendChild(makeTopMainBox("",""));
+
  var addBtn=document.createElement("button");
- addBtn.className="top-side-add";addBtn.textContent="+";
+ addBtn.className="top-side-add";
+ addBtn.textContent="+";
  addBtn.onclick=function(){addTopBox(addBtn);};
- newRowWrap.appendChild(newRow);newRowWrap.appendChild(addBtn);
- if(position==="above"){topSection.insertBefore(newRowWrap,topSection.children[1]);}
- else{topSection.insertBefore(newRowWrap,topSection.lastElementChild);}
+
+ newRowWrap.appendChild(newRow);
+ newRowWrap.appendChild(addBtn);
+
+ if(position==="above"){
+  topSection.insertBefore(newRowWrap,topSection.children[1]);
+ }else{
+  topSection.insertBefore(newRowWrap,topSection.lastElementChild);
+ }
 }
+
 function addColumn(){
  saveState();
  var chiefRow=document.getElementById("chiefRow");
@@ -411,20 +527,24 @@ function addColumn(){
  grid.appendChild(makeDepartmentCol([],false));
  updateGridColumns();
 }
+
 function addTeamBox(button){
  saveState();
  var col=button.closest(".department-col");
  col.insertBefore(makeTeamBox("",[""]),button);
 }
+
 function addPerson(button){
  saveState();
  button.parentElement.insertBefore(makePersonCard(""),button);
 }
+
 function deletePerson(button){
  saveState();
  var personCard=button.closest(".person-card");
  if(personCard){personCard.remove();}
 }
+
 function deleteBox(button){
  saveState();
  var box=button.closest(".box");
@@ -438,26 +558,36 @@ function deleteBox(button){
   }
  }
 }
+
 function deleteColumn(button){
- saveState();
+ commitActiveEdit();
  var node=button.closest(".chief-node");
  var nodes=Array.prototype.slice.call(document.querySelectorAll("#chiefRow .chief-node"));
- if(nodes.length<=1){alert("At least one column should remain.");return;}
+ if(nodes.length<=1){
+  alert("At least one column should remain.");
+  return;
+ }
+ saveState();
  var index=nodes.indexOf(node);
  var cols=document.querySelectorAll("#departmentGrid .department-col");
  if(cols[index]){cols[index].remove();}
- node.remove();updateGridColumns();
+ node.remove();
+ updateGridColumns();
 }
+
 function csvEscape(value){
  var text=String(value||"").replace(/\r/g," ").replace(/\n/g," ").trim();
  return '"'+text.replace(/"/g,'""')+'"';
 }
+
 function addCSVRow(rows,role,name){
  role=String(role||"").trim();
  name=String(name||"").trim();
  if(role || name){rows.push([role,name]);}
 }
+
 function downloadCSV(){
+ commitActiveEdit();
  var rows=[];
  rows.push(["Role Name","Person Name"]);
 
@@ -479,9 +609,49 @@ function downloadCSV(){
  var csv=rows.map(function(row){return row.map(csvEscape).join(",");}).join("\n");
  var blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
  var link=document.createElement("a");
- link.href=URL.createObjectURL(blob);link.download="organizational-structure.csv";
- document.body.appendChild(link);link.click();document.body.removeChild(link);
+ link.href=URL.createObjectURL(blob);
+ link.download="organizational-structure.csv";
+ document.body.appendChild(link);
+ link.click();
+ document.body.removeChild(link);
  URL.revokeObjectURL(link.href);
+}
+
+function downloadImage(){
+ commitActiveEdit();
+
+ if(typeof html2canvas==="undefined"){
+  alert("Image download library not loaded. Please check internet connection and try again.");
+  return;
+ }
+
+ var page=document.getElementById("downloadPage");
+ document.body.classList.add("downloading");
+
+ setTimeout(function(){
+  html2canvas(page,{
+   backgroundColor:"#f8fbff",
+   scale:2,
+   useCORS:true,
+   width:page.scrollWidth,
+   height:page.scrollHeight,
+   windowWidth:page.scrollWidth,
+   windowHeight:page.scrollHeight,
+   scrollX:0,
+   scrollY:0
+  }).then(function(canvas){
+   var link=document.createElement("a");
+   link.download="organizational-structure.png";
+   link.href=canvas.toDataURL("image/png");
+   document.body.appendChild(link);
+   link.click();
+   document.body.removeChild(link);
+   document.body.classList.remove("downloading");
+  }).catch(function(){
+   document.body.classList.remove("downloading");
+   alert("Image download failed. Please try again.");
+  });
+ },150);
 }
 
 renderInitial();
