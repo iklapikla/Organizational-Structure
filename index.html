@@ -210,37 +210,73 @@ var data=[
 var undoStack=[];
 var redoStack=[];
 var isRestoring=false;
+var activeEditSnapshot=null;
+var activeEditInput=null;
 
 function chartHTML(){
  return document.querySelector(".org-chart").innerHTML;
 }
-function saveState(){
+function pushUndoState(html){
  if(isRestoring)return;
- undoStack.push(chartHTML());
+ if(undoStack.length && undoStack[undoStack.length-1]===html)return;
+ if(html===chartHTML())return;
+ undoStack.push(html);
  if(undoStack.length>80)undoStack.shift();
  redoStack=[];
+}
+function saveState(){
+ pushUndoState(chartHTML());
 }
 function restoreState(html){
  isRestoring=true;
  document.querySelector(".org-chart").innerHTML=html;
  updateGridColumns();
  setupExistingInputs();
+ activeEditSnapshot=null;
+ activeEditInput=null;
  isRestoring=false;
 }
+function commitActiveEdit(){
+ if(!activeEditInput || activeEditSnapshot===null)return;
+ var current=chartHTML();
+ if(current!==activeEditSnapshot){
+  pushUndoState(activeEditSnapshot);
+ }
+ activeEditSnapshot=null;
+ activeEditInput=null;
+}
 function undoAction(){
+ var current=chartHTML();
+
+ if(activeEditInput && activeEditSnapshot!==null && current!==activeEditSnapshot){
+  redoStack.push(current);
+  restoreState(activeEditSnapshot);
+  return;
+ }
+
  if(undoStack.length===0)return;
- redoStack.push(chartHTML());
+ redoStack.push(current);
  restoreState(undoStack.pop());
 }
 function redoAction(){
+ commitActiveEdit();
  if(redoStack.length===0)return;
- undoStack.push(chartHTML());
+ var current=chartHTML();
+ if(!undoStack.length || undoStack[undoStack.length-1]!==current){
+  undoStack.push(current);
+ }
  restoreState(redoStack.pop());
 }
 
 function setupInput(input){
- input.addEventListener("focus",saveState);
+ input.addEventListener("focus",function(){
+  activeEditSnapshot=chartHTML();
+  activeEditInput=input;
+ });
  input.addEventListener("input",function(){autoFitInput(input);});
+ input.addEventListener("blur",function(){
+  commitActiveEdit();
+ });
  autoFitInput(input);
 }
 function setupExistingInputs(){
