@@ -6,6 +6,7 @@
   <title>Editable Organizational Structure</title>
 
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Inter,Arial,sans-serif}
@@ -494,6 +495,63 @@
       display:none!important
     }
 
+
+    body.downloading .box{
+      border:1px solid #dbe9ff!important;
+      box-shadow:0 4px 12px rgba(19,74,145,.07)!important;
+      background:#ffffff!important
+    }
+
+    body.downloading .post-input,
+    body.downloading .name-input,
+    body.downloading .role-input,
+    body.downloading .role-name-input{
+      border:0!important;
+      box-shadow:none!important;
+      background:transparent!important;
+      height:auto!important;
+      min-height:0!important;
+      line-height:1.35!important;
+      padding:3px 4px!important;
+      overflow:visible!important;
+      text-overflow:clip!important;
+      white-space:normal!important;
+      -webkit-text-fill-color:currentColor!important
+    }
+
+    body.downloading .person-fields{
+      border:1px solid #eef5ff!important;
+      background:#ffffff!important;
+      padding:4px!important
+    }
+
+    body.downloading .role-input,
+    body.downloading .role-name-input{
+      font-size:9px!important;
+      line-height:1.25!important
+    }
+
+    body.downloading .name-input{
+      font-size:10px!important
+    }
+
+    body.downloading .box.main .name-input{
+      font-size:12px!important
+    }
+
+    body.downloading .top-row:before,
+    body.downloading .chief-row-wrap:before,
+    body.downloading .connector-main,
+    body.downloading .chief-node:before,
+    body.downloading .department-col:before{
+      background:#e4edf9!important
+    }
+
+    body.downloading .chief-node:after,
+    body.downloading .department-col:after{
+      border-color:#dce8f8!important
+    }
+
     body.downloading .box:hover{
       transform:none!important
     }
@@ -504,7 +562,7 @@
   <div class="toolbar">
     <button class="light-btn" onclick="undoAction()">Undo</button>
     <button class="light-btn" onclick="redoAction()">Redo</button>
-    <button onclick="downloadCSV()">Download CSV</button>
+    <button onclick="downloadExcel()">Download Excel</button>
     <button onclick="downloadPNG()">Download as PNG</button>
   </div>
 
@@ -1078,63 +1136,83 @@ function deleteColumn(button){
  updateGridColumns();
 }
 
-function csvEscape(value){
+function cleanExcelValue(value){
 
  var text=String(value||"").replace(/\r/g," ").replace(/\n/g," ").trim();
 
- return '"'+text.replace(/"/g,'""')+'"';
+ if(!text || text==="Enter Role" || text==="Enter name here" || text==="Enter team/post" || text==="Enter team head name" || text==="Enter role" || text==="Enter name"){
+  return "";
+ }
+
+ return text;
 }
 
-function addCSVRow(rows,role,name){
+function addExcelPair(column,styles,role,name){
 
- role=String(role||"").trim();
- name=String(name||"").trim();
+ role=cleanExcelValue(role);
+ name=cleanExcelValue(name);
 
  if(role || name){
-  rows.push([role,name]);
+  column.push(role);
+  styles.push(role?"role":"blank");
+  column.push(name);
+  styles.push(name?"name":"blank");
+  column.push("");
+  styles.push("blank");
  }
 }
 
-function downloadCSV(){
+function setCellStyle(ws,address,type){
+
+ if(!ws[address])return;
+
+ var base={
+  alignment:{horizontal:"center",vertical:"center",wrapText:true},
+  border:{
+   top:{style:"thin",color:{rgb:"D9E8FF"}},
+   bottom:{style:"thin",color:{rgb:"D9E8FF"}},
+   left:{style:"thin",color:{rgb:"D9E8FF"}},
+   right:{style:"thin",color:{rgb:"D9E8FF"}}
+  },
+  fill:{fgColor:{rgb:"F7FBFF"}}
+ };
+
+ if(type==="role"){
+  base.font={bold:true,color:{rgb:"0B2E70"},sz:11};
+  base.fill={fgColor:{rgb:"EAF4FF"}};
+ }
+ else if(type==="name"){
+  base.font={bold:false,color:{rgb:"1976ED"},sz:10};
+  base.fill={fgColor:{rgb:"FFFFFF"}};
+ }
+ else{
+  base.border={};
+  base.fill={fgColor:{rgb:"FFFFFF"}};
+ }
+
+ ws[address].s=base;
+}
+
+function downloadExcel(){
 
  commitActiveEdit();
 
- var csvRows=[];
-
- function clean(value){
-  return String(value||"").replace(/\r/g," ").replace(/\n/g," ").trim();
+ if(typeof XLSX==="undefined"){
+  alert("Excel library not loaded. Please check internet connection and try again.");
+  return;
  }
 
- function hasValue(value){
-  return clean(value)!=="";
+ var aoa=[];
+ var styleMap=[];
+
+ function pushRow(values,types){
+  aoa.push(values);
+  styleMap.push(types || values.map(function(){return "blank";}));
  }
 
- function addVerticalPair(column,role,name){
-  role=clean(role);
-  name=clean(name);
+ pushRow(["Organizational Structure"],["title"]);
+ pushRow([""],["blank"]);
 
-  if(role || name){
-   column.push(role);
-   column.push(name);
-   column.push("");
-  }
- }
-
- function pushMatrix(matrix){
-  matrix.forEach(function(row){
-   csvRows.push(row);
-  });
- }
-
- function csvEscape(value){
-  var text=String(value||"");
-  return '"'+text.replace(/"/g,'""')+'"';
- }
-
- /* TOP SECTION EXPORT
-    Each top box becomes one separate CSV column.
-    Row 1 = role, Row 2 = person name, Row 3 = blank.
- */
  document.querySelectorAll(".top-row-wrap").forEach(function(wrap){
 
   var boxes=Array.prototype.slice.call(wrap.querySelectorAll(".top-row .box.main"));
@@ -1144,35 +1222,40 @@ function downloadCSV(){
   var roleRow=[];
   var nameRow=[];
   var blankRow=[];
+  var roleTypes=[];
+  var nameTypes=[];
+  var blankTypes=[];
 
   boxes.forEach(function(box){
-   roleRow.push(clean(box.querySelector(".post-input").value));
-   nameRow.push(clean(box.querySelector(".name-input").value));
+   roleRow.push(cleanExcelValue(box.querySelector(".post-input").value));
+   nameRow.push(cleanExcelValue(box.querySelector(".name-input").value));
    blankRow.push("");
+   roleTypes.push("role");
+   nameTypes.push("name");
+   blankTypes.push("blank");
   });
 
-  pushMatrix([roleRow,nameRow,blankRow]);
+  pushRow(roleRow,roleTypes);
+  pushRow(nameRow,nameTypes);
+  pushRow(blankRow,blankTypes);
 
  });
 
- csvRows.push([]);
+ pushRow([""],["blank"]);
 
- /* MAIN STRUCTURE EXPORT
-    Each chief department column becomes one separate CSV column.
-    Inside each column: role/post in one cell, person name just below it,
-    then one empty cell after every box/person pair.
- */
  var chiefNodes=Array.prototype.slice.call(document.querySelectorAll("#chiefRow .chief-node"));
  var deptCols=Array.prototype.slice.call(document.querySelectorAll("#departmentGrid .department-col"));
-
  var exportColumns=[];
+ var exportStyles=[];
 
  chiefNodes.forEach(function(node,index){
 
   var col=[];
+  var styles=[];
 
-  addVerticalPair(
+  addExcelPair(
    col,
+   styles,
    node.querySelector(".post-input").value,
    node.querySelector(".name-input").value
   );
@@ -1183,16 +1266,18 @@ function downloadCSV(){
 
    dept.querySelectorAll(".box.team").forEach(function(team){
 
-    addVerticalPair(
+    addExcelPair(
      col,
+     styles,
      team.querySelector(".team-title .post-input").value,
      team.querySelector(".team-title .name-input").value
     );
 
     team.querySelectorAll(".person-card").forEach(function(card){
 
-     addVerticalPair(
+     addExcelPair(
       col,
+      styles,
       card.querySelector(".role-input").value,
       card.querySelector(".role-name-input").value
      );
@@ -1200,16 +1285,17 @@ function downloadCSV(){
     });
 
     col.push("");
+    styles.push("blank");
 
    });
   }
 
   exportColumns.push(col);
+  exportStyles.push(styles);
 
  });
 
  var maxRows=0;
-
  exportColumns.forEach(function(col){
   if(col.length>maxRows)maxRows=col.length;
  });
@@ -1217,31 +1303,58 @@ function downloadCSV(){
  for(var r=0;r<maxRows;r++){
 
   var row=[];
+  var types=[];
 
-  exportColumns.forEach(function(col){
+  exportColumns.forEach(function(col,index){
    row.push(col[r] || "");
+   types.push(exportStyles[index][r] || "blank");
   });
 
-  csvRows.push(row);
+  pushRow(row,types);
  }
 
- var csv=csvRows.map(function(row){
-  return row.map(csvEscape).join(",");
- }).join("\n");
+ var ws=XLSX.utils.aoa_to_sheet(aoa);
+ var range=XLSX.utils.decode_range(ws["!ref"]);
 
- var blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
+ for(var R=range.s.r;R<=range.e.r;R++){
+  for(var C=range.s.c;C<=range.e.c;C++){
+   var addr=XLSX.utils.encode_cell({r:R,c:C});
+   if(!ws[addr])ws[addr]={t:"s",v:""};
 
- var link=document.createElement("a");
+   var type=(styleMap[R] && styleMap[R][C]) ? styleMap[R][C] : "blank";
 
- link.href=URL.createObjectURL(blob);
- link.download="organizational-structure.csv";
+   if(type==="title"){
+    ws[addr].s={
+     font:{bold:true,color:{rgb:"09235F"},sz:18},
+     alignment:{horizontal:"center",vertical:"center"},
+     fill:{fgColor:{rgb:"FFFFFF"}}
+    };
+   }else{
+    setCellStyle(ws,addr,type);
+   }
+  }
+ }
 
- document.body.appendChild(link);
- link.click();
- document.body.removeChild(link);
+ ws["!cols"]=[];
+ for(var c=0;c<=range.e.c;c++){
+  ws["!cols"].push({wch:28});
+ }
 
- URL.revokeObjectURL(link.href);
+ ws["!rows"]=[];
+ for(var rr=0;rr<=range.e.r;rr++){
+  ws["!rows"].push({hpt:22});
+ }
+ ws["!rows"][0]={hpt:30};
+
+ if(range.e.c>0){
+  ws["!merges"]=[{s:{r:0,c:0},e:{r:0,c:range.e.c}}];
+ }
+
+ var wb=XLSX.utils.book_new();
+ XLSX.utils.book_append_sheet(wb,ws,"Org Structure");
+ XLSX.writeFile(wb,"organizational-structure.xlsx",{cellStyles:true});
 }
+
 function downloadPNG(){
 
  commitActiveEdit();
@@ -1259,7 +1372,7 @@ function downloadPNG(){
 
   html2canvas(page,{
    backgroundColor:"#f8fbff",
-   scale:2,
+   scale:3,
    useCORS:true,
    width:page.scrollWidth,
    height:page.scrollHeight,
