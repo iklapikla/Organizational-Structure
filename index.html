@@ -6,12 +6,13 @@
   <title>Editable Organizational Structure</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:Inter,Arial,sans-serif}
+    html,body{min-height:100%;background:#f8fbff}
     body{
       min-height:100vh;
-      background:radial-gradient(circle at top left,rgba(65,150,255,.13),transparent 30%),
-      radial-gradient(circle at bottom right,rgba(65,150,255,.11),transparent 35%),
-      linear-gradient(135deg,#f8fbff 0%,#fff 45%,#f4f9ff 100%);
-      color:#0d2865;overflow:auto
+      background:linear-gradient(135deg,#f8fbff 0%,#ffffff 48%,#f8fbff 100%);
+      background-attachment:fixed;
+      color:#0d2865;
+      overflow:auto
     }
     .toolbar{
       position:fixed;top:16px;right:18px;z-index:1000;
@@ -26,7 +27,12 @@
       background:#ffffff;color:#1479ff;border:1px solid #cfe3ff;
       box-shadow:0 8px 18px rgba(19,74,145,.10)
     }
-    .page{width:max-content;min-width:1700px;padding:28px 34px 60px}
+    .page{
+      width:max-content;
+      min-width:1900px;
+      padding:28px 34px 60px;
+      background:transparent
+    }
     .title-wrap{text-align:center;margin-bottom:26px}
     .title-wrap h1{font-size:52px;line-height:1;font-weight:900;color:#09235f;letter-spacing:-1px}
     .title-line{width:82px;height:5px;background:#2385ff;border-radius:50px;margin:12px auto 0;box-shadow:0 6px 18px rgba(35,133,255,.3)}
@@ -45,7 +51,7 @@
       content:"";position:absolute;top:50%;left:70px;right:70px;height:2px;background:#aebbd5;z-index:0
     }
     .top-row:empty:before{display:none}
-    .top-row .box{z-index:1;min-height:96px;width:300px;flex:0 0 300px}
+    .top-row .box{z-index:1;min-height:96px;width:auto;min-width:320px;flex:0 0 auto}
     .top-side-add{
       position:absolute;right:18px;top:50%;transform:translateY(-50%);
       border:1px dashed rgba(35,133,255,.25);background:rgba(255,255,255,.45);color:rgba(35,133,255,.42);
@@ -55,7 +61,7 @@
     .connector-main{width:2px;height:38px;background:#aebbd5;margin:-38px auto 0}
     .chief-row-wrap{position:relative;padding-top:38px;margin-bottom:44px}
     .chief-row-wrap:before{content:"";position:absolute;top:0;left:7%;right:7%;height:2px;background:#aebbd5}
-    .chief-row,.department-grid{display:grid;grid-template-columns:repeat(7,180px) 54px;gap:22px;align-items:start}
+    .chief-row,.department-grid{display:grid;grid-template-columns:repeat(7,220px) 54px;gap:24px;align-items:start}
     .chief-row{align-items:center}
     .chief-node,.department-col{position:relative}
     .chief-node:before,.department-col:before{content:"";position:absolute;left:50%;width:2px;background:#aebbd5;transform:translateX(-50%)}
@@ -75,17 +81,19 @@
     .box.main{text-align:center;padding:18px 20px}.box.chief{min-height:76px}
     .post-input,.name-input{width:100%;outline:none;text-align:center}
     .post-input{
-      border:0;background:transparent;color:#123678;font-size:17px;font-weight:850;margin-bottom:7px;overflow:hidden;text-overflow:clip
+      border:0;background:transparent;color:#123678;font-size:15px;font-weight:850;margin-bottom:7px;
+      overflow:visible;text-overflow:unset;white-space:normal;min-height:24px
     }
     .post-input:focus{background:#f7fbff;border-radius:7px;box-shadow:inset 0 0 0 1px #cfe3ff}
     .name-input{
-      border:1px dashed #8dbfff;border-radius:8px;background:#f2f8ff;padding:7px 8px;color:#1976ed;font-size:12px;font-weight:750
+      border:1px dashed #8dbfff;border-radius:8px;background:#f2f8ff;padding:7px 8px;color:#1976ed;font-size:12px;font-weight:750;
+      overflow:visible;text-overflow:unset
     }
     .name-input::placeholder{color:#a8b2c1}
     .box.main .post-input{font-size:20px;min-height:27px}.box.main .name-input{font-size:14px}
 
     .team-title{display:grid;grid-template-columns:1fr;gap:7px;margin-bottom:10px}
-    .team-title .post-input{text-align:left;font-size:16px;margin-bottom:0}.team-title .name-input{text-align:left}
+    .team-title .post-input{text-align:left;font-size:15px;margin-bottom:0}.team-title .name-input{text-align:left}
     .person-list{display:flex;flex-direction:column;gap:7px;margin-top:10px}
     .person-card{display:grid;grid-template-columns:1fr 24px;gap:6px;align-items:center}
     .person-fields{display:grid;grid-template-columns:1fr;gap:5px;background:#fbfdff;border:1px solid #dceaff;border-radius:8px;padding:5px}
@@ -216,6 +224,7 @@ function restoreState(html){
  isRestoring=true;
  document.querySelector(".org-chart").innerHTML=html;
  updateGridColumns();
+ setupExistingInputs();
  isRestoring=false;
 }
 function undoAction(){
@@ -229,10 +238,32 @@ function redoAction(){
  restoreState(redoStack.pop());
 }
 
+function setupInput(input){
+ input.addEventListener("focus",saveState);
+ input.addEventListener("input",function(){autoFitInput(input);});
+ autoFitInput(input);
+}
+function setupExistingInputs(){
+ document.querySelectorAll("input").forEach(setupInput);
+}
+function autoFitInput(input){
+ var text=(input.value || input.placeholder || "");
+ var len=text.length;
+ if(input.classList.contains("post-input")){
+  if(len>28){input.style.fontSize="12px";}
+  else if(len>22){input.style.fontSize="13px";}
+  else if(len>17){input.style.fontSize="14px";}
+  else{input.style.fontSize=input.closest(".box.main")?"20px":"15px";}
+ }
+ if(input.classList.contains("role-input") || input.classList.contains("role-name-input")){
+  if(len>22){input.style.fontSize="10px";}
+  else{input.style.fontSize="11px";}
+ }
+}
 function makeInput(className,value,placeholder){
  var input=document.createElement("input");
  input.className=className;input.value=value||"";input.placeholder=placeholder||"";
- input.addEventListener("focus",saveState);
+ setupInput(input);
  return input;
 }
 function makeDeleteButton(functionName){
@@ -310,7 +341,7 @@ function updateGridColumns(){
  var grid=document.getElementById("departmentGrid");
  if(!chiefRow || !grid)return;
  var chiefCount=document.querySelectorAll("#chiefRow .chief-node").length;
- var template="repeat("+chiefCount+", 180px) 54px";
+ var template="repeat("+chiefCount+", 220px) 54px";
  chiefRow.style.gridTemplateColumns=template;
  grid.style.gridTemplateColumns=template;
 }
@@ -418,6 +449,7 @@ function downloadCSV(){
 }
 
 renderInitial();
+setupExistingInputs();
 </script>
 </body>
 </html>
