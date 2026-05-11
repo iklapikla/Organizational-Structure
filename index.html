@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Editable Organizational Structure</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Inter, Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(65, 150, 255, 0.13), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(65, 150, 255, 0.11), transparent 35%),
+        linear-gradient(135deg, #f8fbff 0%, #ffffff 45%, #f4f9ff 100%);
+      color: #0d2865;
+      overflow-x: auto;
+    }
+
+    .toolbar {
+      position: fixed;
+      top: 16px;
+      right: 18px;
+      z-index: 1000;
+    }
+
+    .download-btn {
+      border: 0;
+      background: linear-gradient(135deg, #1479ff, #0058d8);
+      color: #ffffff;
+      padding: 12px 18px;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: 850;
+      cursor: pointer;
+      box-shadow: 0 12px 26px rgba(20, 121, 255, 0.25);
+    }
+
+    .download-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 32px rgba(20, 121, 255, 0.32);
+    }
+
+    .page {
+      width: 100%;
+      min-width: 1280px;
+      padding: 28px 34px 48px;
+    }
+
+    .capture-area {
+      min-width: 1280px;
+      padding: 0;
+      background:
+        radial-gradient(circle at top left, rgba(65, 150, 255, 0.13), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(65, 150, 255, 0.11), transparent 35%),
+        linear-gradient(135deg, #f8fbff 0%, #ffffff 45%, #f4f9ff 100%);
+    }
+
+    .title-wrap {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .title-wrap h1 {
+      font-size: 52px;
+      line-height: 1;
+      font-weight: 900;
+      color: #09235f;
+      letter-spacing: -1px;
+    }
+
+    .title-line {
+      width: 82px;
+      height: 5px;
+      background: #2385ff;
+      border-radius: 50px;
+      margin: 12px auto 0;
+      box-shadow: 0 6px 18px rgba(35, 133, 255, 0.3);
+    }
+
+    .org-chart {
+      position: relative;
+      width: 100%;
+    }
+
+    .top-row {
+      display: grid;
+      grid-template-columns: 240px 300px 240px;
+      justify-content: center;
+      align-items: center;
+      gap: 70px;
+      margin-bottom: 38px;
+      position: relative;
+    }
+
+    .top-row::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: calc(50% - 410px);
+      width: 820px;
+      height: 2px;
+      background: #aebbd5;
+      z-index: 0;
+    }
+
+    .top-row .box {
+      z-index: 1;
+      min-height: 94px;
+    }
+
+    .connector-main {
+      width: 2px;
+      height: 38px;
+      background: #aebbd5;
+      margin: -38px auto 0;
+    }
+
+    .chief-row-wrap {
+      position: relative;
+      padding-top: 38px;
+      margin-bottom: 44px;
+    }
+
+    .chief-row-wrap::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 7%;
+      right: 7%;
+      height: 2px;
+      background: #aebbd5;
+    }
+
+    .chief-row,
+    .department-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr) 54px;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .chief-row {
+      align-items: center;
+    }
+
+    .chief-node,
+    .department-col {
+      position: relative;
+    }
+
+    .chief-node::before,
+    .department-col::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      width: 2px;
+      background: #aebbd5;
+      transform: translateX(-50%);
+    }
+
+    .chief-node::before {
+      top: -38px;
+      height: 32px;
+    }
+
+    .department-col::before {
+      top: -44px;
+      height: 34px;
+    }
+
+    .chief-node::after,
+    .department-col::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      width: 8px;
+      height: 8px;
+      border: 2px solid #aebbd5;
+      background: #f8fbff;
+      border-radius: 50%;
+      transform: translateX(-50%);
+    }
+
+    .chief-node::after {
+      top: -42px;
+    }
+
+    .department-col::after {
+      top: -50px;
+    }
+
+    .department-col {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      min-height: 80px;
+    }
+
+    .box {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1.5px solid #cde0ff;
+      border-radius: 13px;
+      box-shadow: 0 8px 18px rgba(19, 74, 145, 0.13);
+      padding: 14px 16px;
+      position: relative;
+      min-height: 78px;
+      transition: 0.2s ease;
+    }
+
+    .box:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px rgba(19, 74, 145, 0.18);
+      border-color: #91c2ff;
+    }
+
+    .box.main {
+      text-align: center;
+      padding: 18px 20px;
+    }
+
+    .box.chief {
+      min-height: 76px;
+    }
+
+    .post-input,
+    .name-input {
+      width: 100%;
+      outline: none;
+      text-align: center;
+    }
+
+    .post-input {
+      border: 0;
+      background: transparent;
+      color: #123678;
+      font-size: 18px;
+      font-weight: 850;
+      margin-bottom: 7px;
+    }
+
+    .post-input:focus {
+      background: #f7fbff;
+      border-radius: 7px;
+      box-shadow: inset 0 0 0 1px #cfe3ff;
+    }
+
+    .name-input {
+      border: 1px dashed #ffba63;
+      border-radius: 8px;
+      background: #fff7eb;
+      padding: 7px 8px;
+      color: #9a5200;
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .name-input::placeholder {
+      color: #b98242;
+    }
+
+    .box.main .post-input {
+      font-size: 25px;
+    }
+
+    .box.main .name-input {
+      font-size: 13px;
+    }
+
+    .team-title {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 7px;
+      margin-bottom: 10px;
+    }
+
+    .team-title .post-input {
+      text-align: left;
+      font-size: 16px;
+      margin-bottom: 0;
+    }
+
+    .team-title .name-input {
+      text-align: left;
+    }
+
+    .person-list {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      margin-top: 10px;
+    }
+
+    .person-card {
+      display: grid;
+      grid-template-columns: 1fr 24px;
+      gap: 6px;
+      align-items: stretch;
+    }
+
+    .person-fields {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 5px;
+      background: #fbfdff;
+      border: 1px solid #dceaff;
+      border-radius: 8px;
+      padding: 5px;
+    }
+
+    .role-input,
+    .role-name-input {
+      width: 100%;
+      border: 0;
+      outline: none;
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 12px;
+    }
+
+    .role-input {
+      background: #ffffff;
+      color: #173a78;
+      font-weight: 750;
+      box-shadow: inset 0 0 0 1px #e4efff;
+    }
+
+    .role-name-input {
+      background: #fff4e4;
+      color: #9a5200;
+      font-weight: 750;
+      box-shadow: inset 0 0 0 1px #ffd3a0;
+    }
+
+    .role-name-input::placeholder {
+      color: #b98242;
+    }
+
+    .delete-btn,
+    .small-delete {
+      position: absolute;
+      top: 7px;
+      right: 7px;
+      border: 0;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #fff1f2;
+      color: #e11d48;
+      font-size: 14px;
+      font-weight: 900;
+      cursor: pointer;
+      line-height: 20px;
+      box-shadow: 0 3px 8px rgba(225, 29, 72, 0.12);
+      opacity: 0;
+      transition: 0.2s ease;
+    }
+
+    .box:hover .delete-btn {
+      opacity: 1;
+    }
+
+    .small-delete {
+      position: static;
+      align-self: center;
+      width: 22px;
+      height: 22px;
+      font-size: 13px;
+      opacity: 1;
+      box-shadow: none;
+    }
+
+    .add-person {
+      border: 1px dashed #8dbfff;
+      background: #f2f8ff;
+      color: #1976ed;
+      height: 28px;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .add-person:hover,
+    .add-box:hover,
+    .add-column:hover {
+      background: #e8f3ff;
+      border-color: #2385ff;
+      transform: scale(1.03);
+    }
+
+    .add-box {
+      width: 100%;
+      min-height: 70px;
+      border: 2px dashed #a8ccff;
+      background: rgba(255, 255, 255, 0.65);
+      border-radius: 13px;
+      color: #2385ff;
+      font-size: 30px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 6px 14px rgba(19, 74, 145, 0.08);
+      transition: 0.2s ease;
+    }
+
+    .add-column {
+      width: 54px;
+      min-height: 76px;
+      border: 2px dashed #a8ccff;
+      background: rgba(255, 255, 255, 0.75);
+      border-radius: 13px;
+      color: #2385ff;
+      font-size: 32px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .helper-note {
+      position: fixed;
+      right: 22px;
+      bottom: 18px;
+      background: #09235f;
+      color: #fff;
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-size: 13px;
+      box-shadow: 0 14px 28px rgba(9, 35, 95, 0.2);
+      z-index: 50;
+    }
+
+    .exporting .toolbar,
+    .exporting .helper-note,
+    .exporting .delete-btn,
+    .exporting .small-delete,
+    .exporting .add-person,
+    .exporting .add-box,
+    .exporting .add-column {
+      display: none !important;
+    }
+
+    @media (max-width: 1300px) {
+      .page,
+      .capture-area {
+        min-width: 1180px;
+      }
+
+      .chief-row,
+      .department-grid {
+        gap: 16px;
+      }
+
+      .title-wrap h1 {
+        font-size: 46px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <button class="download-btn" onclick="downloadAs4KImage()">Download as Image 4K</button>
+  </div>
+
+  <div class="page">
+    <div class="capture-area" id="captureArea">
+      <div class="title-wrap">
+        <h1>Organizational Structure</h1>
+        <div class="title-line"></div>
+      </div>
+
+      <div class="org-chart">
+        <div class="top-row">
+          <div class="box main">
+            <button class="delete-btn" onclick="deleteBox(this)">×</button>
+            <input class="post-input" value="Managing Director" placeholder="Enter Post" />
+            <input class="name-input" placeholder="Enter name here" />
+          </div>
+
+          <div class="box main">
+            <button class="delete-btn" onclick="deleteBox(this)">×</button>
+            <input class="post-input" value="Director" placeholder="Enter Post" />
+            <input class="name-input" value="Ankit Jayant" placeholder="Enter name here" />
+          </div>
+
+          <div class="box main">
+            <button class="delete-btn" onclick="deleteBox(this)">×</button>
+            <input class="post-input" value="Chief Strategist" placeholder="Enter Post" />
+            <input class="name-input" placeholder="Enter name here" />
+          </div>
+        </div>
+
+        <div class="connector-main"></div>
+
+        <div class="chief-row-wrap">
+          <div class="chief-row" id="chiefRow">
+            <div class="chief-node"><div class="box chief"><button class="delete-btn" onclick="deleteColumn(this)">×</button><input class="post-input" value="CTO" placeholder="Enter Post" /><input class="name-input" placeholder="Enter name here" /></div></div>
+            <div class="chief-node"><div class="box chief"><button class="delete-btn" onclick="deleteColumn(this)">×</button><input class="post-input" value="CPO" placeholder="Enter Post" /><input class="name-input" placeholder="Enter name here" /></div></div>
+            <div class="chief-node"><div class="box chief"><button class="delete-btn" onclick="deleteColumn(this)">×</button><input class="post-input" value="CBO" placeholder="Enter Post" /><input class="name-input" placeholder="Enter name here" /></div></div>
+            <div class="chief-node"><div class="box chief"><button class="delete-btn" onclick="deleteColumn(this)">×</button><input class="post-input" value="CMO" placeholder="Enter Post" /><input class="name-input" placeholder="Enter name here" /></div></div>
+            <div class="chief-node"><div class="box chief"><button class="delete-btn" onclick="deleteColumn(this)">×</button><input class="post-input" value="COO" placeholder="Enter Post" /><input class="name-input" placeholder="Enter name here" /></div></div>
+            <div class="chief-node"><div class="box chief"><button class="delete-btn" onclick="deleteColumn(this)">×</button><input class="post-input" value="CFO" placeholder="Enter Post" /><input class="name-input" placeholder="Enter name here" /></div></div>
+            <div class="chief-node"><div class="box chief"><button class="delete-btn" onclick="deleteColumn(this)">×</button><input class="post-input" value="CHRO" placeholder="Enter Post" /><input class="name-input" placeholder="Enter name here" /></div></div>
+            <button class="add-column" onclick="addColumn()">+</button>
+          </div>
+        </div>
+
+        <div class="department-grid" id="departmentGrid">
+          <div class="department-col">
+            <div class="box team">
+              <button class="delete-btn" onclick="deleteBox(this)">×</button>
+              <div class="team-title"><input class="post-input" value="AI / ML Team" placeholder="Enter team/post" /><input class="name-input" placeholder="Enter team head name" /></div>
+              <div class="person-list">
+                <div class="person-card"><div class="person-fields"><input class="role-input" value="NLP Engineer" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div>
+                <div class="person-card"><div class="person-fields"><input class="role-input" value="ML Engineer" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div>
+                <div class="person-card"><div class="person-fields"><input class="role-input" value="Data Scientist" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div>
+                <button class="add-person" onclick="addPerson(this)">+</button>
+              </div>
+            </div>
+            <div class="box team"><button class="delete-btn" onclick="deleteBox(this)">×</button><div class="team-title"><input class="post-input" value="Engineering Team" placeholder="Enter team/post" /><input class="name-input" placeholder="Enter team head name" /></div><div class="person-list"><div class="person-card"><div class="person-fields"><input class="role-input" value="Backend Developer" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><div class="person-card"><div class="person-fields"><input class="role-input" value="Frontend Developer" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><div class="person-card"><div class="person-fields"><input class="role-input" value="DevOps Engineer" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><button class="add-person" onclick="addPerson(this)">+</button></div></div>
+            <div class="box team"><button class="delete-btn" onclick="deleteBox(this)">×</button><div class="team-title"><input class="post-input" value="Data Team" placeholder="Enter team/post" /><input class="name-input" placeholder="Enter team head name" /></div><div class="person-list"><div class="person-card"><div class="person-fields"><input class="role-input" value="Data Engineer" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><div class="person-card"><div class="person-fields"><input class="role-input" value="Data Analyst" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><button class="add-person" onclick="addPerson(this)">+</button></div></div>
+            <div class="box team"><button class="delete-btn" onclick="deleteBox(this)">×</button><div class="team-title"><input class="post-input" value="Security Team" placeholder="Enter team/post" /><input class="name-input" placeholder="Enter team head name" /></div><div class="person-list"><div class="person-card"><div class="person-fields"><input class="role-input" value="Security Engineer" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><div class="person-card"><div class="person-fields"><input class="role-input" value="Threat Analyst" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><button class="add-person" onclick="addPerson(this)">+</button></div></div>
+            <button class="add-box" onclick="addTeamBox(this)">+</button>
+          </div>
+
+          <div class="department-col">
+            <div class="box team"><button class="delete-btn" onclick="deleteBox(this)">×</button><div class="team-title"><input class="post-input" value="Product Team" placeholder="Enter team/post" /><input class="name-input" placeholder="Enter team head name" /></div><div class="person-list"><div class="person-card"><div class="person-fields"><input class="role-input" value="Product Manager" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><div class="person-card"><div class="person-fields"><input class="role-input" value="UX / UI Designer" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><button class="add-person" onclick="addPerson(this)">+</button></div></div>
+            <div class="box team"><button class="delete-btn" onclick="deleteBox(this)">×</button><div class="team-title"><input class="post-input" value="Recommendation Team" placeholder="Enter team/post" /><input class="name-input" placeholder="Enter team head name" /></div><div class="person-list"><div class="person-card"><div class="person-fields"><input class="role-input" value="Recommendation Engineer" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><div class="person-card"><div class="person-fields"><input class="role-input" value="ML Engineer" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><button class="add-person" onclick="addPerson(this)">+</button></div></div>
+            <button class="add-box" onclick="addTeamBox(this)">+</button>
+          </div>
+
+          <div class="department-col">
+            <div class="box team"><button class="delete-btn" onclick="deleteBox(this)">×</button><div class="team-title"><input class="post-input" value="Business Team" placeholder="Enter team/post" /><input class="name-input" placeholder="Enter team head name" /></div><div class="person-list"><div class="person-card"><div class="person-fields"><input class="role-input" value="Business Development Manager" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><div class="person-card"><div class="person-fields"><input class="role-input" value="Strategy Manager" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><button class="add-person" onclick="addPerson(this)">+</button></div></div>
+            <div class="box team"><button class="delete-btn" onclick="deleteBox(this)">×</button><div class="team-title"><input class="post-input" value="Sales Team" placeholder="Enter team/post" /><input class="name-input" placeholder="Enter team head name" /></div><div class="person-list"><div class="person-card"><div class="person-fields"><input class="role-input" value="Sales Manager" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><div class="person-card"><div class="person-fields"><input class="role-input" value="Account Manager" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><button class="add-person" onclick="addPerson(this)">+</button></div></div>
+            <div class="box team"><button class="delete-btn" onclick="deleteBox(this)">×</button><div class="team-title"><input class="post-input" value="Partnership Team" placeholder="Enter team/post" /><input class="name-input" placeholder="Enter team head name" /></div><div class="person-list"><div class="person-card"><div class="person-fields"><input class="role-input" value="Partnership Manager" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><div class="person-card"><div class="person-fields"><input class="role-input" value="Alliance Manager" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><button class="add-person" onclick="addPerson(this)">+</button></div></div>
+            <button class="add-box" onclick="addTeamBox(this)">+</button>
+          </div>
+
+          <div class="department-col">
+            <div class="box team"><button class="delete-btn" onclick="deleteBox(this)">×</button><div class="team-title"><input class="post-input" value="Marketing Team" placeholder="Enter team/post" /><input class="name-input" placeholder="Enter team head name" /></div><div class="person-list"><div class="person-card"><div class="person-fields"><input class="role-input" value="Performance Marketer" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><div class="person-card"><div class="person-fields"><input class="role-input" value="Social Media Manager" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><button class="add-person" onclick="addPerson(this)">+</button></div></div>
+            <div class="box team"><button class="delete-btn" onclick="deleteBox(this)">×</button><div class="team-title"><input class="post-input" value="Creator Ecosystem Team" placeholder="Enter team/post" /><input class="name-input" placeholder="Enter team head name" /></div><div class="person-list"><div class="person-card"><div class="person-fields"><input class="role-input" value="Creator Manager" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><div class="person-card"><div class="person-fields"><input class="role-input" value="Creator Strategist" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><button class="add-person" onclick="addPerson(this)">+</button></div></div>
+            <div class="box team"><button class="delete-btn" onclick="deleteBox(this)">×</button><div class="team-title"><input class="post-input" value="Content Team" placeholder="Enter team/post" /><input class="name-input" placeholder="Enter team head name" /></div><div class="person-list"><div class="person-card"><div class="person-fields"><input class="role-input" value="Script Writer" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><div class="person-card"><div class="person-fields"><input class="role-input" value="Editor" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><button class="add-person" onclick="addPerson(this)">+</button></div></div>
+            <button class="add-box" onclick="addTeamBox(this)">+</button>
+          </div>
+
+          <div class="department-col">
+            <div class="box team"><button class="delete-btn" onclick="deleteBox(this)">×</button><div class="team-title"><input class="post-input" value="Operations Team" placeholder="Enter team/post" /><input class="name-input" placeholder="Enter team head name" /></div><div class="person-list"><div class="person-card"><div class="person-fields"><input class="role-input" value="Operations Manager" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><div class="person-card"><div class="person-fields"><input class="role-input" value="Process Analyst" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><button class="add-person" onclick="addPerson(this)">+</button></div></div>
+            <div class="box team"><button class="delete-btn" onclick="deleteBox(this)">×</button><div class="team-title"><input class="post-input" value="Support Team" placeholder="Enter team/post" /><input class="name-input" placeholder="Enter team head name" /></div><div class="person-list"><div class="person-card"><div class="person-fields"><input class="role-input" value="Customer Support" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><div class="person-card"><div class="person-fields"><input class="role-input" value="Creator Support" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><button class="add-person" onclick="addPerson(this)">+</button></div></div>
+            <div class="box team"><button class="delete-btn" onclick="deleteBox(this)">×</button><div class="team-title"><input class="post-input" value="Moderation Team" placeholder="Enter team/post" /><input class="name-input" placeholder="Enter team head name" /></div><div class="person-list"><div class="person-card"><div class="person-fields"><input class="role-input" value="Moderators" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><div class="person-card"><div class="person-fields"><input class="role-input" value="AI Moderation Ops" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><button class="add-person" onclick="addPerson(this)">+</button></div></div>
+            <button class="add-box" onclick="addTeamBox(this)">+</button>
+          </div>
+
+          <div class="department-col">
+            <div class="box team"><button class="delete-btn" onclick="deleteBox(this)">×</button><div class="team-title"><input class="post-input" value="Finance Team" placeholder="Enter team/post" /><input class="name-input" placeholder="Enter team head name" /></div><div class="person-list"><div class="person-card"><div class="person-fields"><input class="role-input" value="Accountant" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><div class="person-card"><div class="person-fields"><input class="role-input" value="Financial Analyst" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><button class="add-person" onclick="addPerson(this)">+</button></div></div>
+            <div class="box team"><button class="delete-btn" onclick="deleteBox(this)">×</button><div class="team-title"><input class="post-input" value="Ads / Monetization Team" placeholder="Enter team/post" /><input class="name-input" placeholder="Enter team head name" /></div><div class="person-list"><div class="person-card"><div class="person-fields"><input class="role-input" value="Ad Operations" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><div class="person-card"><div class="person-fields"><input class="role-input" value="Yield Manager" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><button class="add-person" onclick="addPerson(this)">+</button></div></div>
+            <button class="add-box" onclick="addTeamBox(this)">+</button>
+          </div>
+
+          <div class="department-col">
+            <div class="box team"><button class="delete-btn" onclick="deleteBox(this)">×</button><div class="team-title"><input class="post-input" value="HR Team" placeholder="Enter team/post" /><input class="name-input" placeholder="Enter team head name" /></div><div class="person-list"><div class="person-card"><div class="person-fields"><input class="role-input" value="Recruiter" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><div class="person-card"><div class="person-fields"><input class="role-input" value="HR Operations" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><button class="add-person" onclick="addPerson(this)">+</button></div></div>
+            <div class="box team"><button class="delete-btn" onclick="deleteBox(this)">×</button><div class="team-title"><input class="post-input" value="AI Training Team" placeholder="Enter team/post" /><input class="name-input" placeholder="Enter team head name" /></div><div class="person-list"><div class="person-card"><div class="person-fields"><input class="role-input" value="AI Trainers" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><div class="person-card"><div class="person-fields"><input class="role-input" value="Linguists" placeholder="Enter role" /><input class="role-name-input" placeholder="Enter name" /></div><button class="small-delete" onclick="deletePerson(this)">×</button></div><button class="add-person" onclick="addPerson(this)">+</button></div></div>
+            <button class="add-box" onclick="addTeamBox(this)">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="helper-note">Role blue/white me rahega • Name orange box me alag dikhega • + se new role/box add hoga</div>
+
+  <script>
+    function updateGridColumns() {
+      const chiefRow = document.getElementById('chiefRow');
+      const departmentGrid = document.getElementById('departmentGrid');
+      const chiefCount = chiefRow.querySelectorAll('.chief-node').length;
+      const template = `repeat(${chiefCount}, 1fr) 54px`;
+      chiefRow.style.gridTemplateColumns = template;
+      departmentGrid.style.gridTemplateColumns = template;
+    }
+
+    function makePersonCard(role = '') {
+      const card = document.createElement('div');
+      card.className = 'person-card';
+      card.innerHTML = `
+        <div class="person-fields">
+          <input class="role-input" value="${role}" placeholder="Enter role" />
+          <input class="role-name-input" placeholder="Enter name" />
+        </div>
+        <button class="small-delete" onclick="deletePerson(this)">×</button>
+      `;
+      return card;
+    }
+
+    function makeTeamBox(title = '') {
+      const box = document.createElement('div');
+      box.className = 'box team';
+      box.innerHTML = `
+        <button class="delete-btn" onclick="deleteBox(this)">×</button>
+        <div class="team-title">
+          <input class="post-input" value="${title}" placeholder="Enter team/post" />
+          <input class="name-input" placeholder="Enter team head name" />
+        </div>
+        <div class="person-list">
+          <div class="person-card">
+            <div class="person-fields">
+              <input class="role-input" placeholder="Enter role" />
+              <input class="role-name-input" placeholder="Enter name" />
+            </div>
+            <button class="small-delete" onclick="deletePerson(this)">×</button>
+          </div>
+          <button class="add-person" onclick="addPerson(this)">+</button>
+        </div>
+      `;
+      return box;
+    }
+
+    function addTeamBox(button) {
+      const col = button.closest('.department-col');
+      col.insertBefore(makeTeamBox(''), button);
+    }
+
+    function addPerson(button) {
+      button.parentElement.insertBefore(makePersonCard(''), button);
+    }
+
+    function deletePerson(button) {
+      button.closest('.person-card').remove();
+    }
+
+    function deleteBox(button) {
+      const box = button.closest('.box');
+      if (box) box.remove();
+    }
+
+    function addColumn() {
+      const chiefRow = document.getElementById('chiefRow');
+      const departmentGrid = document.getElementById('departmentGrid');
+      const addColumnButton = chiefRow.querySelector('.add-column');
+
+      const chiefNode = document.createElement('div');
+      chiefNode.className = 'chief-node';
+      chiefNode.innerHTML = `
+        <div class="box chief">
+          <button class="delete-btn" onclick="deleteColumn(this)">×</button>
+          <input class="post-input" placeholder="Enter Post" />
+          <input class="name-input" placeholder="Enter name here" />
+        </div>
+      `;
+      chiefRow.insertBefore(chiefNode, addColumnButton);
+
+      const col = document.createElement('div');
+      col.className = 'department-col';
+      const addBoxBtn = document.createElement('button');
+      addBoxBtn.className = 'add-box';
+      addBoxBtn.textContent = '+';
+      addBoxBtn.setAttribute('onclick', 'addTeamBox(this)');
+      col.appendChild(makeTeamBox(''));
+      col.appendChild(addBoxBtn);
+
+      departmentGrid.appendChild(col);
+      updateGridColumns();
+    }
+
+    function deleteColumn(button) {
+      const chiefNode = button.closest('.chief-node');
+      const chiefNodes = Array.from(document.querySelectorAll('#chiefRow .chief-node'));
+      const index = chiefNodes.indexOf(chiefNode);
+      const cols = document.querySelectorAll('#departmentGrid .department-col');
+
+      if (chiefNodes.length <= 1) {
+        alert('At least one column should remain.');
+        return;
+      }
+
+      if (index >= 0 && cols[index]) cols[index].remove();
+      chiefNode.remove();
+      updateGridColumns();
+    }
+
+    async function downloadAs4KImage() {
+      const captureArea = document.getElementById('captureArea');
+      const btn = document.querySelector('.download-btn');
+
+      if (!window.html2canvas) {
+        alert('Image download library load nahi hui. Internet on karke page refresh karo.');
+        return;
+      }
+
+      btn.textContent = 'Creating 4K Image...';
+      document.body.classList.add('exporting');
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      const canvas = await html2canvas(captureArea, {
+        backgroundColor: '#ffffff',
+        scale: 3,
+        useCORS: true,
+        logging: false,
+        width: captureArea.scrollWidth,
+        height: captureArea.scrollHeight,
+        windowWidth: captureArea.scrollWidth,
+        windowHeight: captureArea.scrollHeight
+      });
+
+      const finalCanvas = document.createElement('canvas');
+      const ctx = finalCanvas.getContext('2d');
+      finalCanvas.width = 3840;
+      finalCanvas.height = 2160;
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+
+      const scale = Math.min(finalCanvas.width / canvas.width, finalCanvas.height / canvas.height);
+      const newWidth = canvas.width * scale;
+      const newHeight = canvas.height * scale;
+      const x = (finalCanvas.width - newWidth) / 2;
+      const y = (finalCanvas.height - newHeight) / 2;
+
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(canvas, x, y, newWidth, newHeight);
+
+      const link = document.createElement('a');
+      link.download = 'organizational-structure-4k.png';
+      link.href = finalCanvas.toDataURL('image/png');
+      link.click();
+
+      document.body.classList.remove('exporting');
+      btn.textContent = 'Download as Image 4K';
+    }
+
+    updateGridColumns();
+  </script>
+</body>
+</html>
