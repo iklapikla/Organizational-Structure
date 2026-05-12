@@ -51,7 +51,7 @@
 
     .page{
       width:max-content;
-      min-width:1900px;
+      min-width:2280px;
       padding:28px 34px 60px;
       background:transparent
     }
@@ -184,7 +184,7 @@
     .chief-row,
     .department-grid{
       display:grid;
-      grid-template-columns:repeat(7,220px) 54px;
+      grid-template-columns:repeat(8,220px) 54px;
       gap:24px;
       align-items:start
     }
@@ -247,6 +247,32 @@
       flex-direction:column;
       gap:18px;
       min-height:80px
+    }
+
+
+    /* FLOW UPDATE: vertical connector line between stacked department/team boxes */
+    .department-col{
+      gap:34px
+    }
+
+    .department-col .box.team{
+      position:relative
+    }
+
+    .department-col .box.team:not(:last-of-type)::after{
+      content:"";
+      position:absolute;
+      left:50%;
+      bottom:-35px;
+      width:1px;
+      height:34px;
+      background:#d6e0f1;
+      transform:translateX(-50%);
+      z-index:0
+    }
+
+    body.downloading .department-col .box.team:not(:last-of-type)::after{
+      background:#e4edf9!important
     }
 
     .box{
@@ -796,7 +822,7 @@
               <div class="box main">
                 <button class="delete-btn" onclick="deleteBox(this)">×</button>
                 <input class="post-input" value="" placeholder="Enter Role">
-                <input class="name-input" value="Trupti Latur" placeholder="Enter name here">
+                <input class="name-input" value="Ankit Jayant" placeholder="Enter name here">
               </div>
 
             </div>
@@ -839,37 +865,41 @@
 
 var data=[
  {chief:"Chief Technology Officer",name:"",teams:[
-  {title:"AI / ML Team",roles:["NLP Engineer","ML Engineer","Data Scientist"]},
-  {title:"Engineering Team",roles:["Backend Developer","Frontend Developer","DevOps Engineer"]},
-  {title:"Data Team",roles:["Data Engineer","Data Analyst"]},
-  {title:"Security Team",roles:["Security Engineer","Threat Analyst"]}
+  {title:"AI / ML Team",roles:["Head","NLP Engineer","ML Engineer","Data Scientist"]},
+  {title:"Engineering Team",roles:["Head","Backend Developer","Frontend Developer","DevOps Engineer"]},
+  {title:"Data Team",roles:["Head","Data Engineer","Data Analyst","-"]},
+  {title:"Security Team",roles:["Head","Security Engineer","Threat Analyst","-"]}
  ]},
  {chief:"Chief Product Officer",name:"",teams:[
-  {title:"Product Team",roles:["Product Manager","UX / UI Designer"]},
-  {title:"Recommendation Team",roles:["Recommendation Engineer","ML Engineer"]},
-  {title:"AI Training Team",roles:["AI Trainers","Linguists"]}
+  {title:"Product Team",roles:["Head","Product Manager","UX / UI Designer","-"]},
+  {title:"Recommendation Team",roles:["Head","Recommendation Engineer","ML Engineer","-"]},
+  {title:"AI Training Team",roles:["Head","AI Trainers","Linguists","-"]},
+  {title:"AI Engineers Team",roles:["-","-","-","-"]}
  ]},
  {chief:"Chief Business Officer",name:"",teams:[
-  {title:"Business Team",roles:["Business Development Manager","Strategy Manager"]},
-  {title:"Sales Team",roles:["Sales Manager","Account Manager"]},
-  {title:"Partnership Team",roles:["Partnership Manager","Alliance Manager"]}
+  {title:"Business Team",roles:["Head","Business Development Manager","Strategy Manager","-"]},
+  {title:"Strategy Team",roles:["Head","Business Strategy Manager","Growth Strategist","Market Intelligence"]}
  ]},
  {chief:"Chief Marketing Officer",name:"",teams:[
-  {title:"Marketing Team",roles:["Performance Marketer","Social Media Manager"]},
-  {title:"Creator Ecosystem Team",roles:["Creator Manager","Creator Strategist"]},
-  {title:"Content Team",roles:["Script Writer","Editor"]}
+  {title:"Marketing Team",roles:["Head","Performance Marketer","Social Media Manager","-"]},
+  {title:"Creator Ecosystem Team",roles:["Head","Creator Manager","Creator Strategist","-"]},
+  {title:"Content Team",roles:["Head","Script Writer","Editor","-"]}
  ]},
  {chief:"Chief Operating Officer",name:"",teams:[
-  {title:"Operations Team",roles:["Operations Manager","Process Analyst"]},
-  {title:"Support Team",roles:["Customer Support","Creator Support"]},
-  {title:"Moderation Team",roles:["Moderators","AI Moderation Ops"]}
+  {title:"Operations Team",roles:["Head","Operations Manager","Process Analyst","-"]},
+  {title:"Support Team",roles:["Head","Customer Support","Creator Support","-"]},
+  {title:"Moderation Team",roles:["Head","Moderators","AI Moderation Ops","-"]}
  ]},
  {chief:"Chief Financial Officer",name:"",teams:[
-  {title:"Finance Team",roles:["Accountant","Financial Analyst"]},
-  {title:"Ads / Monetization Team",roles:["Ad Operations","Yield Manager"]}
+  {title:"Finance Team",roles:["Head","Accountant","Financial Analyst","-"]},
+  {title:"Ads / Monetization Team",roles:["Head","Ad Operations","Yield Manager","-"]}
  ]},
  {chief:"Chief Human Resources Officer",name:"",teams:[
-  {title:"HR Team",roles:["Recruiter","HR Operations"]}
+  {title:"HR Team",roles:["Head","Recruiter","HR Operations","-"]}
+ ]},
+ {chief:"Chief Revenue Officer (CRO)",name:"",teams:[
+  {title:"Sales Team",roles:["Head","Sales Manager","Account Manager","-"]},
+  {title:"Partnership Team",roles:["Head","Partnership Manager","Alliance Manager","-"]}
  ]}
 ];
 
