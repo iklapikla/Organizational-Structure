@@ -599,7 +599,7 @@
       position:relative;
       width:1120px;
       margin:0 auto;
-      min-height:396px;
+      min-height:300px;
     }
 
     .top-flow:before{
@@ -659,11 +659,11 @@
     .executive-stack{
       position:absolute;
       left:calc(50% + 86px);
-      top:154px;
+      top:150px;
       width:430px;
       display:flex;
       flex-direction:column;
-      gap:36px;
+      gap:0;
       z-index:3;
     }
 
@@ -699,8 +699,8 @@
       min-height:82px;
       padding:13px 16px;
       display:grid;
-      grid-template-columns:58px 1fr;
-      gap:14px;
+      grid-template-columns:1fr;
+      gap:0;
       align-items:center;
       border:1.5px solid #cde0ff;
       background:rgba(255,255,255,.97);
@@ -728,14 +728,14 @@
     }
 
     .executive-content .post-input{
-      text-align:left;
+      text-align:center;
       font-size:16px;
       margin-bottom:8px;
       color:#123678;
     }
 
     .executive-content .name-input{
-      text-align:left;
+      text-align:center;
       background:transparent;
       border:0;
       border-bottom:1px dashed #8dbfff;
@@ -810,20 +810,8 @@
             <div class="executive-node">
               <div class="box chief executive-card">
                 <button class="delete-btn" onclick="deleteBox(this)">×</button>
-                <div class="executive-icon purple-badge">CS</div>
                 <div class="executive-content">
-                  <input class="post-input" value="Chief Strategist" placeholder="Enter Post">
-                  <input class="name-input" value="" placeholder="Enter name here">
-                </div>
-              </div>
-            </div>
-
-            <div class="executive-node">
-              <div class="box chief executive-card">
-                <button class="delete-btn" onclick="deleteBox(this)">×</button>
-                <div class="executive-icon blue-badge">CEO</div>
-                <div class="executive-content">
-                  <input class="post-input" value="CEO" placeholder="Enter Post">
+                  <input class="post-input" value="Chief Strategist/CEO" placeholder="Enter Post">
                   <input class="name-input" value="" placeholder="Enter name here">
                 </div>
               </div>
@@ -833,7 +821,6 @@
 
         </div>
 
-        <button class="section-add" onclick="addTopSection('below')">+</button>
 
       </div>
 
@@ -859,7 +846,8 @@ var data=[
  ]},
  {chief:"Chief Product Officer",name:"",teams:[
   {title:"Product Team",roles:["Product Manager","UX / UI Designer"]},
-  {title:"Recommendation Team",roles:["Recommendation Engineer","ML Engineer"]}
+  {title:"Recommendation Team",roles:["Recommendation Engineer","ML Engineer"]},
+  {title:"AI Training Team",roles:["AI Trainers","Linguists"]}
  ]},
  {chief:"Chief Business Officer",name:"",teams:[
   {title:"Business Team",roles:["Business Development Manager","Strategy Manager"]},
@@ -881,8 +869,7 @@ var data=[
   {title:"Ads / Monetization Team",roles:["Ad Operations","Yield Manager"]}
  ]},
  {chief:"Chief Human Resources Officer",name:"",teams:[
-  {title:"HR Team",roles:["Recruiter","HR Operations"]},
-  {title:"AI Training Team",roles:["AI Trainers","Linguists"]}
+  {title:"HR Team",roles:["Recruiter","HR Operations"]}
  ]}
 ];
 
