@@ -589,6 +589,174 @@
     body.downloading .box:hover{
       transform:none!important
     }
+
+    /* UPDATED TOP FLOW - Ankit/Trupti at top, Chief Strategist + CEO branched on right */
+    .top-section{
+      margin-bottom:0;
+    }
+
+    .top-flow{
+      position:relative;
+      width:1120px;
+      margin:0 auto;
+      min-height:396px;
+    }
+
+    .top-flow:before{
+      content:"";
+      position:absolute;
+      left:50%;
+      top:58px;
+      bottom:-6px;
+      width:1px;
+      background:#d6e0f1;
+      transform:translateX(-50%);
+      z-index:0;
+    }
+
+    .top-flow:after{
+      content:"";
+      position:absolute;
+      left:calc(50% - 4px);
+      top:144px;
+      width:8px;
+      height:8px;
+      border:1px solid #c7d6ed;
+      background:#f8fbff;
+      border-radius:50%;
+      z-index:2;
+    }
+
+    .top-flow .top-row-wrap{
+      width:100%;
+      margin:0 auto;
+      position:relative;
+      z-index:3;
+    }
+
+    .top-flow .top-row{
+      gap:90px;
+      padding:0 90px;
+      min-height:118px;
+    }
+
+    .top-flow .top-row:before{
+      left:90px;
+      right:90px;
+      top:50%;
+      background:#d6e0f1;
+    }
+
+    .top-flow .top-row .box{
+      min-width:430px;
+      min-height:98px;
+    }
+
+    .top-flow .top-side-add{
+      right:20px;
+    }
+
+    .executive-stack{
+      position:absolute;
+      left:calc(50% + 86px);
+      top:154px;
+      width:430px;
+      display:flex;
+      flex-direction:column;
+      gap:36px;
+      z-index:3;
+    }
+
+    .executive-node{
+      position:relative;
+    }
+
+    .executive-node:before{
+      content:"";
+      position:absolute;
+      right:100%;
+      top:50%;
+      width:86px;
+      height:1px;
+      background:#d6e0f1;
+      z-index:0;
+    }
+
+    .executive-node:after{
+      content:"";
+      position:absolute;
+      left:-91px;
+      top:calc(50% - 4px);
+      width:8px;
+      height:8px;
+      border:1px solid #c7d6ed;
+      background:#f8fbff;
+      border-radius:50%;
+      z-index:2;
+    }
+
+    .executive-card{
+      min-height:82px;
+      padding:13px 16px;
+      display:grid;
+      grid-template-columns:58px 1fr;
+      gap:14px;
+      align-items:center;
+      border:1.5px solid #cde0ff;
+      background:rgba(255,255,255,.97);
+    }
+
+    .executive-icon{
+      width:52px;
+      height:52px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#fff;
+      font-size:13px;
+      font-weight:950;
+      box-shadow:inset 0 0 0 7px rgba(255,255,255,.48),0 8px 18px rgba(19,74,145,.12);
+    }
+
+    .purple-badge{
+      background:linear-gradient(135deg,#7c3cff,#9b5cff);
+    }
+
+    .blue-badge{
+      background:linear-gradient(135deg,#1479ff,#0058d8);
+    }
+
+    .executive-content .post-input{
+      text-align:left;
+      font-size:16px;
+      margin-bottom:8px;
+      color:#123678;
+    }
+
+    .executive-content .name-input{
+      text-align:left;
+      background:transparent;
+      border:0;
+      border-bottom:1px dashed #8dbfff;
+      border-radius:0;
+      padding:6px 4px;
+    }
+
+    .connector-main{
+      height:40px;
+      margin:0 auto 0;
+      background:#d6e0f1;
+    }
+
+    body.downloading .top-flow:before,
+    body.downloading .top-flow:after,
+    body.downloading .executive-node:before,
+    body.downloading .executive-node:after{
+      border-color:#dce8f8!important;
+      background:#e4edf9!important;
+    }
+
   </style>
 </head>
 <body>
@@ -613,31 +781,55 @@
 
         <button class="section-add" onclick="addTopSection('above')">+</button>
 
-        <div class="top-row-wrap">
+        <div class="top-flow">
 
-          <div class="top-row" id="topRow">
+          <div class="top-row-wrap">
 
-            <div class="box main">
-              <button class="delete-btn" onclick="deleteBox(this)">×</button>
-              <input class="post-input" value="" placeholder="Enter Role">
-              <input class="name-input" value="Trupti Latur" placeholder="Enter name here">
+            <div class="top-row" id="topRow">
+
+              <div class="box main">
+                <button class="delete-btn" onclick="deleteBox(this)">×</button>
+                <input class="post-input" value="" placeholder="Enter Role">
+                <input class="name-input" value="Ankit Jayant" placeholder="Enter name here">
+              </div>
+
+              <div class="box main">
+                <button class="delete-btn" onclick="deleteBox(this)">×</button>
+                <input class="post-input" value="" placeholder="Enter Role">
+                <input class="name-input" value="Trupti Latur" placeholder="Enter name here">
+              </div>
+
             </div>
 
-            <div class="box main">
-              <button class="delete-btn" onclick="deleteBox(this)">×</button>
-              <input class="post-input" value="" placeholder="Enter Role">
-              <input class="name-input" value="Ankit Jayant" placeholder="Enter name here">
-            </div>
-
-            <div class="box main">
-              <button class="delete-btn" onclick="deleteBox(this)">×</button>
-              <input class="post-input" value="Founder" placeholder="Enter Role">
-              <input class="name-input" value="" placeholder="Enter name here">
-            </div>
+            <button class="top-side-add" onclick="addTopBox(this)">+</button>
 
           </div>
 
-          <button class="top-side-add" onclick="addTopBox(this)">+</button>
+          <div class="executive-stack" id="executiveStack">
+
+            <div class="executive-node">
+              <div class="box chief executive-card">
+                <button class="delete-btn" onclick="deleteBox(this)">×</button>
+                <div class="executive-icon purple-badge">CS</div>
+                <div class="executive-content">
+                  <input class="post-input" value="Chief Strategist" placeholder="Enter Post">
+                  <input class="name-input" value="" placeholder="Enter name here">
+                </div>
+              </div>
+            </div>
+
+            <div class="executive-node">
+              <div class="box chief executive-card">
+                <button class="delete-btn" onclick="deleteBox(this)">×</button>
+                <div class="executive-icon blue-badge">CEO</div>
+                <div class="executive-content">
+                  <input class="post-input" value="CEO" placeholder="Enter Post">
+                  <input class="name-input" value="" placeholder="Enter name here">
+                </div>
+              </div>
+            </div>
+
+          </div>
 
         </div>
 
@@ -1048,10 +1240,10 @@ function addTopSection(position){
 
  saveState();
 
- var topSection=document.getElementById("topSection");
+ var topFlow=document.querySelector(".top-flow");
 
  var newRowWrap=document.createElement("div");
- newRowWrap.className="top-row-wrap";
+ newRowWrap.className="top-row-wrap extra-top-row";
 
  var newRow=document.createElement("div");
  newRow.className="top-row";
@@ -1071,9 +1263,9 @@ function addTopSection(position){
  newRowWrap.appendChild(addBtn);
 
  if(position==="above"){
-  topSection.insertBefore(newRowWrap,topSection.children[1]);
+  topFlow.insertBefore(newRowWrap,topFlow.firstElementChild);
  }else{
-  topSection.insertBefore(newRowWrap,topSection.lastElementChild);
+  topFlow.appendChild(newRowWrap);
  }
 }
 
